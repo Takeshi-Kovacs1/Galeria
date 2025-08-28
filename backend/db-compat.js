@@ -1,4 +1,4 @@
-import { query } from './db-config.js';
+import { query, getConnection } from './db-config.js';
 
 // Función de compatibilidad para emular db.run (INSERT, UPDATE, DELETE)
 export const db = {
@@ -26,8 +26,24 @@ export const db = {
   get: async (sql, params = []) => {
     try {
       const pgSql = sql.replace(/\?/g, (match, index) => `$${index + 1}`);
-      const result = await query(pgSql, params);
-      return result.rows[0] || null;
+      
+      // Usar consulta preparada con tipos explícitos
+      const client = await getConnection();
+      try {
+        // Crear una consulta preparada
+        const preparedQuery = {
+          text: pgSql,
+          values: params,
+          types: {
+            getTypeParser: () => (val) => val
+          }
+        };
+        
+        const result = await client.query(pgSql, params);
+        return result.rows[0] || null;
+      } finally {
+        client.release();
+      }
     } catch (error) {
       console.error('Error en db.get:', error);
       throw error;
@@ -38,8 +54,15 @@ export const db = {
   all: async (sql, params = []) => {
     try {
       const pgSql = sql.replace(/\?/g, (match, index) => `$${index + 1}`);
-      const result = await query(pgSql, params);
-      return result.rows;
+      
+      // Usar consulta preparada con tipos explícitos
+      const client = await getConnection();
+      try {
+        const result = await client.query(pgSql, params);
+        return result.rows;
+      } finally {
+        client.release();
+      }
     } catch (error) {
       console.error('Error en db.all:', error);
       throw error;
