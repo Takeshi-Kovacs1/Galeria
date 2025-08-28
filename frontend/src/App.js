@@ -5,8 +5,8 @@ import { FaCamera } from 'react-icons/fa';
 import { FaImages, FaUser, FaSignOutAlt, FaHeart, FaDownload, FaCheckSquare, FaSquare, FaUserTag, FaCrown } from 'react-icons/fa';
 import AdminPanel from './AdminPanel';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:4001/api';
-const UPLOADS_URL = process.env.REACT_APP_UPLOADS_URL || 'http://localhost:4001/uploads';
+const API = process.env.REACT_APP_API_URL || 'https://galeria-actuaria-backend.onrender.com/api';
+const UPLOADS_URL = process.env.REACT_APP_UPLOADS_URL || 'https://galeria-actuaria-backend.onrender.com/uploads';
 
 const Carrusel = React.memo(({ fotos, visibleVista }) => {
   // Obtener solo las 3 fotos más votadas
