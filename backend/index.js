@@ -31,7 +31,16 @@ if (isEmailConfigured()) {
   console.log('📧 Para configurar email, edita backend/email-config.js');
 }
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://galeria-cyan.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Middleware de logging para debug
