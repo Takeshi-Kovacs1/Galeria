@@ -10,7 +10,7 @@ import { query, initDatabase } from './db-config.js';
 import { db } from './db-compat.js';
 
 const app = express();
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT || 4002;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecreto';
 
 // Configuración de email

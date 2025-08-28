@@ -21,10 +21,11 @@ const AdminPanel = ({ user, onLogout }) => {
   // Función para hacer peticiones a la API
   const apiCall = async (endpoint, options = {}) => {
     const token = getToken();
+    const API_BASE = process.env.REACT_APP_API_URL || 'https://galeria-actuaria-backend.onrender.com/api';
     console.log('🔑 Token obtenido:', token ? 'Sí' : 'No');
-    console.log('🌐 Haciendo petición a:', `http://localhost:4001${endpoint}`);
+    console.log('🌐 Haciendo petición a:', `${API_BASE}${endpoint}`);
     
-    const response = await fetch(`http://localhost:4001${endpoint}`, {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ const AdminPanel = ({ user, onLogout }) => {
     try {
       console.log('📊 Cargando dashboard...');
       setLoading(true);
-      const data = await apiCall('/api/admin/dashboard');
+      const data = await apiCall('/admin/dashboard');
       console.log('✅ Dashboard cargado:', data);
       setDashboardData(data);
     } catch (error) {
@@ -62,7 +63,7 @@ const AdminPanel = ({ user, onLogout }) => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await apiCall('/api/admin/users');
+      const data = await apiCall('/admin/users');
       setUsers(data);
     } catch (error) {
       setMessage(`Error cargando usuarios: ${error.message}`);
@@ -75,7 +76,7 @@ const AdminPanel = ({ user, onLogout }) => {
   const loadPhotos = async () => {
     try {
       setLoading(true);
-      const data = await apiCall('/api/admin/photos');
+      const data = await apiCall('/admin/photos');
       setPhotos(data);
     } catch (error) {
       setMessage(`Error cargando fotos: ${error.message}`);
@@ -89,7 +90,7 @@ const AdminPanel = ({ user, onLogout }) => {
     try {
       console.log('📝 Cargando logs...');
       setLoading(true);
-      const data = await apiCall('/api/admin/logs');
+      const data = await apiCall('/admin/logs');
       console.log('✅ Logs cargados:', data);
       setLogs(data);
     } catch (error) {
@@ -106,7 +107,7 @@ const AdminPanel = ({ user, onLogout }) => {
       console.log('🗑️ Iniciando limpieza de todos los logs...');
       setLoading(true);
       
-      const response = await apiCall('/api/admin/logs/clear', {
+      const response = await apiCall('/admin/logs/clear', {
         method: 'DELETE'
       });
       
@@ -132,7 +133,7 @@ const AdminPanel = ({ user, onLogout }) => {
   // Banear/desbanear usuario
   const toggleUserBan = async (userId, isBanned) => {
     try {
-      await apiCall(`/api/admin/users/${userId}/ban`, {
+      await apiCall(`/admin/users/${userId}/ban`, {
         method: 'POST',
         body: JSON.stringify({ is_banned: !isBanned })
       });
@@ -147,7 +148,7 @@ const AdminPanel = ({ user, onLogout }) => {
   // Eliminar usuario
   const deleteUser = async (userId, username) => {
     try {
-      await apiCall(`/api/admin/users/${userId}`, {
+      await apiCall(`/admin/users/${userId}`, {
         method: 'DELETE'
       });
       
@@ -161,7 +162,7 @@ const AdminPanel = ({ user, onLogout }) => {
   // Eliminar foto directamente
   const deletePhotoDirectly = async (photoId, filename) => {
     try {
-      await apiCall(`/api/admin/photos/${photoId}`, {
+      await apiCall(`/admin/photos/${photoId}`, {
         method: 'DELETE'
       });
       
@@ -210,7 +211,7 @@ const AdminPanel = ({ user, onLogout }) => {
       
       // Eliminar fotos una por una
       for (const photoId of photoIds) {
-        await apiCall(`/api/admin/photos/${photoId}`, {
+        await apiCall(`/admin/photos/${photoId}`, {
           method: 'DELETE'
         });
       }
@@ -463,7 +464,7 @@ const AdminPanel = ({ user, onLogout }) => {
                   </div>
                   
                   <img 
-                    src={`http://localhost:4001/uploads/${photo.filename}`} 
+                    src={`${process.env.REACT_APP_UPLOADS_URL || 'https://galeria-actuaria-backend.onrender.com/uploads'}/${photo.filename}`} 
                     alt={photo.filename}
                     onError={(e) => {
                       e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjVGNUY1Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2lpx0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7imqDlm748L3RleHQ+Cjwvc3ZnPgo=';
