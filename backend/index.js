@@ -1,13 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import nodemailer from 'nodemailer';
+import { query, initDatabase } from './db-config.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -58,142 +57,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Inicializar base de datos
-let db;
+// Inicializar base de datos PostgreSQL
 (async () => {
-  db = await open({
-    filename: './galeria.sqlite',
-    driver: sqlite3.Database
-  });
-  // Crear tablas si no existen
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS sections (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT UNIQUE NOT NULL,
-      description TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      email TEXT UNIQUE,
-      password TEXT,
-      role TEXT DEFAULT 'user',
-      is_banned INTEGER DEFAULT 0,
-      profile_picture TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS photos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      section_id INTEGER,
-      filename TEXT,
-      title TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(section_id) REFERENCES sections(id)
-    );
-    CREATE TABLE IF NOT EXISTS votes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      photo_id INTEGER,
-      UNIQUE(user_id, photo_id),
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(photo_id) REFERENCES photos(id)
-    );
-    CREATE TABLE IF NOT EXISTS comments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      photo_id INTEGER,
-      comment TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(photo_id) REFERENCES photos(id)
-    );
-    CREATE TABLE IF NOT EXISTS photo_tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      photo_id INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user_id, photo_id),
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(photo_id) REFERENCES photos(id)
-    );
-    CREATE TABLE IF NOT EXISTS admin_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      admin_id INTEGER,
-      action TEXT,
-      target_type TEXT,
-      target_id INTEGER,
-      details TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(admin_id) REFERENCES users(id)
-    );
-  `);
-  
-  // Migrar base de datos existente si es necesario
   try {
-    console.log('🔧 Verificando migración de base de datos...');
-    
-    // Verificar si la columna role existe en users
-    const tableInfo = await db.all("PRAGMA table_info(users)");
-    const hasRole = tableInfo.some(col => col.name === 'role');
-    
-    if (!hasRole) {
-      console.log('📋 Agregando columna role a tabla users...');
-      await db.run('ALTER TABLE users ADD COLUMN role TEXT DEFAULT "user"');
-      console.log('✅ Columna role agregada');
-    }
-    
-    // Verificar si la columna is_banned existe
-    const hasBanned = tableInfo.some(col => col.name === 'is_banned');
-    if (!hasBanned) {
-      console.log('📋 Agregando columna is_banned a tabla users...');
-      await db.run('ALTER TABLE users ADD COLUMN is_banned INTEGER DEFAULT 0');
-      console.log('✅ Columna is_banned agregada');
-    }
-    
-    // Verificar si la columna created_at existe
-    const hasCreatedAt = tableInfo.some(col => col.name === 'created_at');
-    if (!hasCreatedAt) {
-      console.log('📋 Agregando columna created_at a tabla users...');
-      await db.run('ALTER TABLE users ADD COLUMN created_at DATETIME');
-      // Actualizar registros existentes con fecha actual
-    }
-    
-    // Verificar si la columna profile_picture existe
-    const hasProfilePicture = tableInfo.some(col => col.name === 'profile_picture');
-    if (!hasProfilePicture) {
-      console.log('📋 Agregando columna profile_picture a tabla users...');
-      await db.run('ALTER TABLE users ADD COLUMN profile_picture TEXT');
-      console.log('✅ Columna profile_picture agregada');
-    }
-    
-    // Actualizar registros existentes con fecha actual
-    await db.run('UPDATE users SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL');
-    console.log('✅ Columna created_at agregada');
-    
-    console.log('✅ Migración de base de datos completada');
-  } catch (err) {
-    console.error('❌ Error en migración:', err);
-  }
-  
-  // Crear usuario admin por defecto si no existe
-  try {
-    const adminExists = await db.get('SELECT * FROM users WHERE username = ?', ['admin']);
-    if (!adminExists) {
-      const adminPassword = 'Admin123!';
-      const adminHash = await bcrypt.hash(adminPassword, 10);
-      await db.run('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', 
-        ['admin', 'admin@galeria.com', adminHash, 'admin']);
-      console.log('👑 Usuario admin creado por defecto');
-      console.log('🔑 Usuario: admin');
-      console.log('🔑 Contraseña: Admin123!');
-      console.log('⚠️ IMPORTANTE: Cambia esta contraseña después del primer login');
-    } else {
-      console.log('👑 Usuario admin ya existe');
-    }
-  } catch (err) {
-    console.error('Error creando usuario admin:', err);
+    await initDatabase();
+    console.log('✅ Base de datos PostgreSQL inicializada correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando base de datos PostgreSQL:', error);
+    process.exit(1);
   }
 })();
 
