@@ -295,9 +295,9 @@ app.post('/api/photos', auth, upload.array('photos', 50), async (req, res) => {
     // Insertar todas las fotos subidas
     for (const file of req.files) {
       console.log('💾 Insertando archivo:', file.filename);
-      const result = await db.run('INSERT INTO photos (user_id, filename, title, section_id) VALUES (?, ?, ?, ?)', 
+      const result = await query('INSERT INTO photos (user_id, filename, title, section_id) VALUES ($1, $2, $3, $4) RETURNING id', 
         [req.user.id, file.filename, null, section_id]);
-      console.log('✅ Archivo insertado con ID:', result.lastID);
+      console.log('✅ Archivo insertado con ID:', result.rows[0].id);
     }
     
     console.log('🎉 Todas las fotos subidas exitosamente');
@@ -335,34 +335,45 @@ app.get('/api/photos', async (req, res) => {
   query += ' ORDER BY photos.created_at DESC';
   
   try {
-    const photos = await db.all(query, params);
-    res.json(photos);
+    const photosResult = await query(query, params);
+    res.json(photosResult.rows);
   } catch (err) {
+    console.error('❌ Error obteniendo fotos:', err);
     res.status(500).json({ error: 'Error al obtener fotos' });
   }
 });
 
 // Obtener fotos por usuario con estadísticas
 app.get('/api/user/photos', auth, async (req, res) => {
-  const photos = await db.all(`
-    SELECT photos.*, 
-           (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
-           (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
-    FROM photos 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC
-  `, [req.user.id]);
-  res.json(photos);
+  try {
+    const photosResult = await query(`
+      SELECT photos.*, 
+             (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
+             (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
+      FROM photos 
+      WHERE user_id = $1 
+      ORDER BY created_at DESC
+    `, [req.user.id]);
+    res.json(photosResult.rows);
+  } catch (err) {
+    console.error('❌ Error obteniendo fotos del usuario:', err);
+    res.status(500).json({ error: 'Error al obtener fotos del usuario' });
+  }
 });
 
 // Obtener estadísticas del usuario
 app.get('/api/user/stats', auth, async (req, res) => {
-  const stats = await db.get(`
-    SELECT 
-      (SELECT COUNT(*) FROM photos WHERE user_id = ?) as total_photos,
-      (SELECT COUNT(*) FROM votes WHERE photo_id IN (SELECT id FROM photos WHERE user_id = ?)) as total_likes
-  `, [req.user.id, req.user.id]);
-  res.json(stats);
+  try {
+    const statsResult = await query(`
+      SELECT 
+        (SELECT COUNT(*) FROM photos WHERE user_id = $1) as total_photos,
+        (SELECT COUNT(*) FROM votes WHERE photo_id IN (SELECT id FROM photos WHERE user_id = $1)) as total_likes
+    `, [req.user.id]);
+    res.json(statsResult.rows[0]);
+  } catch (err) {
+    console.error('❌ Error obteniendo estadísticas del usuario:', err);
+    res.status(500).json({ error: 'Error al obtener estadísticas del usuario' });
+  }
 });
 
 // Votar por una foto
@@ -665,12 +676,13 @@ app.post('/api/sections', async (req, res) => {
   }
   
   try {
-    await db.run('INSERT INTO sections (name, description) VALUES (?, ?)', [name, description]);
+    await query('INSERT INTO sections (name, description) VALUES ($1, $2)', [name, description]);
     res.json({ ok: true, message: 'Sección creada exitosamente' });
   } catch (err) {
-    if (err.message.includes('UNIQUE constraint failed')) {
+    if (err.message.includes('duplicate key value violates unique constraint')) {
       res.status(400).json({ error: 'Ya existe una sección con ese nombre' });
     } else {
+      console.error('❌ Error creando sección:', err);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
@@ -699,24 +711,25 @@ app.put('/api/sections/:id', async (req, res) => {
   try {
     console.log('🔍 Verificando si la sección existe...');
     // Verificar si la sección existe
-    const section = await db.get('SELECT * FROM sections WHERE id = ?', [id]);
-    if (!section) {
+    const sectionResult = await query('SELECT * FROM sections WHERE id = $1', [id]);
+    if (sectionResult.rows.length === 0) {
       console.log('❌ Sección no encontrada con ID:', id);
       return res.status(404).json({ error: 'Sección no encontrada' });
     }
     
+    const section = sectionResult.rows[0];
     console.log('✅ Sección encontrada:', section);
     
     // Verificar si el nuevo nombre ya existe en otra sección
-    const existingSection = await db.get('SELECT * FROM sections WHERE name = ? AND id != ?', [name, id]);
-    if (existingSection) {
+    const existingSectionResult = await query('SELECT * FROM sections WHERE name = $1 AND id != $2', [name, id]);
+    if (existingSectionResult.rows.length > 0) {
       console.log('❌ Ya existe una sección con ese nombre');
       return res.status(400).json({ error: 'Ya existe una sección con ese nombre' });
     }
     
     console.log('💾 Actualizando sección...');
     // Actualizar la sección
-    await db.run('UPDATE sections SET name = ?, description = ? WHERE id = ?', [name, description, id]);
+    await query('UPDATE sections SET name = $1, description = $2 WHERE id = $3', [name, description, id]);
     console.log('✅ Sección actualizada exitosamente');
     res.json({ ok: true, message: 'Sección actualizada exitosamente' });
   } catch (err) {
