@@ -33,6 +33,14 @@ export const getConnection = async () => {
 export const query = async (text, params) => {
   const client = await getConnection();
   try {
+    // Si no hay parámetros, ejecutar directamente
+    if (!params || params.length === 0) {
+      const result = await client.query(text);
+      return result;
+    }
+    
+    // Si hay parámetros, usar query con parámetros
+    // PostgreSQL puede inferir tipos automáticamente en la mayoría de casos
     const result = await client.query(text, params);
     return result;
   } finally {
