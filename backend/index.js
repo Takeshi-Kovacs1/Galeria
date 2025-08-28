@@ -441,19 +441,39 @@ app.delete('/api/photos/:id', auth, async (req, res) => {
 
 // Fotos más votadas (para el carrusel)
 app.get('/api/photos/top', async (req, res) => {
-  const top = await db.all(`
-    SELECT photos.*, users.username, sections.name as section_name,
-           COUNT(votes.id) as votes,
-           (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
-    FROM photos 
-    JOIN users ON users.id = photos.user_id 
-    JOIN sections ON sections.id = photos.section_id
-    LEFT JOIN votes ON votes.photo_id = photos.id 
-    GROUP BY photos.id 
-    ORDER BY votes DESC, photos.created_at DESC 
-    LIMIT 10
-  `);
-  res.json(top);
+  try {
+    // Consulta simplificada para evitar problemas de tipos
+    const top = await db.all(`
+      SELECT 
+        p.id,
+        p.filename,
+        p.title,
+        p.created_at,
+        u.username,
+        s.name as section_name,
+        COALESCE(v.vote_count, 0) as votes,
+        COALESCE(c.comment_count, 0) as comments
+      FROM photos p
+      JOIN users u ON u.id = p.user_id 
+      JOIN sections s ON s.id = p.section_id
+      LEFT JOIN (
+        SELECT photo_id, COUNT(*) as vote_count 
+        FROM votes 
+        GROUP BY photo_id
+      ) v ON v.photo_id = p.id
+      LEFT JOIN (
+        SELECT photo_id, COUNT(*) as comment_count 
+        FROM comments 
+        GROUP BY photo_id
+      ) c ON c.photo_id = p.id
+      ORDER BY COALESCE(v.vote_count, 0) DESC, p.created_at DESC 
+      LIMIT 10
+    `);
+    res.json(top);
+  } catch (err) {
+    console.error('Error obteniendo fotos top:', err);
+    res.status(500).json({ error: 'Error al obtener fotos top' });
+  }
 });
 
 // Marcar/desmarcar foto como "apareces en esta foto"
