@@ -182,25 +182,34 @@ app.post('/api/register', async (req, res) => {
 
 // Login
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-  if (!user) return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
-  
-  // Verificar si el usuario está baneado
-  if (user.is_banned) {
-    return res.status(403).json({ error: 'Tu cuenta ha sido suspendida. Contacta al administrador.' });
+  try {
+    const { username, password } = req.body;
+    
+    // Usar query nativo de PostgreSQL en lugar de db.get
+    const result = await query('SELECT * FROM users WHERE username = $1', [username]);
+    const user = result.rows[0];
+    
+    if (!user) return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+    
+    // Verificar si el usuario está baneado
+    if (user.is_banned) {
+      return res.status(403).json({ error: 'Tu cuenta ha sido suspendida. Contacta al administrador.' });
+    }
+    
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+    
+    const token = jwt.sign({ 
+      id: user.id, 
+      username: user.username, 
+      role: user.role 
+    }, JWT_SECRET);
+    
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (err) {
+    console.error('Error en login:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
-  
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
-  
-  const token = jwt.sign({ 
-    id: user.id, 
-    username: user.username, 
-    role: user.role 
-  }, JWT_SECRET);
-  
-  res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
 });
 
 // Recuperar contraseña - FUNCIONALIDAD DESHABILITADA
