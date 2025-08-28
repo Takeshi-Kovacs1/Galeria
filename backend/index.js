@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import nodemailer from 'nodemailer';
 import { query, initDatabase } from './db-config.js';
+import { db } from './db-compat.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
