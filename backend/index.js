@@ -741,19 +741,19 @@ app.delete('/api/sections/:id', async (req, res) => {
   
   try {
     // Verificar si la sección existe
-    const section = await db.get('SELECT * FROM sections WHERE id = ?', [id]);
-    if (!section) {
+    const sectionResult = await query('SELECT * FROM sections WHERE id = $1', [id]);
+    if (sectionResult.rows.length === 0) {
       return res.status(404).json({ error: 'Sección no encontrada' });
     }
     
     // Verificar si hay fotos en esta sección
-    const photos = await db.get('SELECT COUNT(*) as count FROM photos WHERE section_id = ?', [id]);
-    if (photos.count > 0) {
+    const photosResult = await query('SELECT COUNT(*) as count FROM photos WHERE section_id = $1', [id]);
+    if (parseInt(photosResult.rows[0].count) > 0) {
       return res.status(400).json({ error: 'No se puede eliminar una sección que contiene fotos' });
     }
     
     // Eliminar la sección
-    await db.run('DELETE FROM sections WHERE id = ?', [id]);
+    await query('DELETE FROM sections WHERE id = $1', [id]);
     res.json({ ok: true, message: 'Sección eliminada exitosamente' });
   } catch (err) {
     console.error('Error eliminando sección:', err);
