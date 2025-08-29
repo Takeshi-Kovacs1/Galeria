@@ -246,6 +246,7 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
     
     try {
       await onVotar(fotoId);
+      
       // Cambiar el estado local del voto
       setFotosVotadas(prev => {
         const nuevo = new Set(prev);
@@ -261,10 +262,18 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
       setFotos(prevFotos => 
         prevFotos.map(foto => 
           foto.id === fotoId 
-            ? { ...foto, votes: fotosVotadas.has(fotoId) ? Math.max(0, (foto.votes || 0) - 1) : (foto.votes || 0) + 1 }
+            ? { 
+                ...foto, 
+                votes: fotosVotadas.has(fotoId) 
+                  ? Math.max(0, (foto.votes || 0) - 1) 
+                  : (foto.votes || 0) + 1 
+              }
             : foto
         )
       );
+      
+      console.log('✅ Voto procesado para foto:', fotoId);
+      console.log('✅ Estado de fotosVotadas:', fotosVotadas);
     } catch (err) {
       console.error('Error votando:', err);
     }

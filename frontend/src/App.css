@@ -377,9 +377,9 @@ h1 {
 @media (max-width: 768px) {
   .galeria-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    padding: 0 1rem;
-    margin: 0 0.5rem;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    margin: 0;
   }
   
   .galeria-grid .foto {
@@ -388,12 +388,13 @@ h1 {
     margin: 0;
   }
   
-  /* Ajustar espaciado para que la primera columna tenga margen izquierdo */
-  .galeria-grid .foto:nth-child(2n+1) {
-    margin-left: 0.5rem;
+  /* Mover segunda columna más a la izquierda */
+  .galeria-grid .foto:nth-child(2n) {
+    margin-left: -0.5rem;
   }
   
-  .galeria-grid .foto:nth-child(2n) {
+  /* Primera columna con margen derecho */
+  .galeria-grid .foto:nth-child(2n+1) {
     margin-right: 0.5rem;
   }
 }
@@ -2525,10 +2526,19 @@ h1 {
   text-align: left;
 }
 
+.perfil-ig-foto {
+  flex-shrink: 0;
+}
+
+.perfil-ig-info {
+  flex: 1;
+}
+
 .perfil-ig-stats {
   display: flex;
-  gap: 30px;
+  gap: 40px;
   align-items: center;
+  margin-top: 15px;
 }
 
 .stat-item {
@@ -2539,16 +2549,17 @@ h1 {
 }
 
 .stat-item strong {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 600;
   color: #333;
   line-height: 1;
+  margin-bottom: 5px;
 }
 
 .stat-item span {
   font-size: 0.9rem;
   color: #666;
-  margin-top: 0.2rem;
+  text-transform: lowercase;
 }
 
 .perfil-ig-header h2 {
@@ -3231,6 +3242,7 @@ img {
     gap: 1rem;
     font-size: 0.9rem;
     text-align: center;
+    margin-top: 10px;
   }
   
   .stat-item {
@@ -3243,11 +3255,13 @@ img {
   .stat-item strong {
     font-size: 1.2rem;
     color: #333;
+    margin-bottom: 2px;
   }
   
   .stat-item span {
     font-size: 0.8rem;
     color: #666;
+    text-transform: lowercase;
   }
   
   .perfil-ig-tabs {
