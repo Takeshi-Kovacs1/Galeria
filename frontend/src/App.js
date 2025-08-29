@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
@@ -1387,18 +1388,7 @@ const Perfil = React.memo(({ token, setVista }) => {
           ))
         )}
         
-        {/* Botón de descargar abajo de las fotos en "Donde aparezco" */}
-        {vistaPerfil === 'donde-aparezco' && fotosActuales.length > 0 && (
-          <div className="perfil-ig-descargar-section">
-            <button 
-              className="perfil-ig-descargar-btn-bottom" 
-              onClick={() => setModoSeleccion(true)}
-              title="Descargar múltiples fotos"
-            >
-              <FaDownload /> Descargar fotos seleccionadas
-            </button>
-          </div>
-        )}
+
       </div>
 
       {/* Mensajes de estado */}
