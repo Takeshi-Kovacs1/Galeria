@@ -83,9 +83,28 @@ export const initDatabase = async () => {
         section_id INTEGER REFERENCES sections(id) ON DELETE CASCADE,
         filename VARCHAR(255),
         title VARCHAR(255),
+        cloudinary_url TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
+    // Verificar si la columna cloudinary_url existe, si no, agregarla
+    const columnCheck = await query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'photos' AND column_name = 'cloudinary_url'
+    `);
+    
+    if (columnCheck.rows.length === 0) {
+      console.log('📋 Agregando columna cloudinary_url a la tabla photos...');
+      await query(`
+        ALTER TABLE photos 
+        ADD COLUMN cloudinary_url TEXT
+      `);
+      console.log('✅ Columna cloudinary_url agregada exitosamente');
+    } else {
+      console.log('✅ La columna cloudinary_url ya existe');
+    }
 
     await query(`
       CREATE TABLE IF NOT EXISTS votes (

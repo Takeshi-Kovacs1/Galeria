@@ -8,6 +8,7 @@ import fs from 'fs';
 import nodemailer from 'nodemailer';
 import { query, initDatabase } from './db-config.js';
 import { db } from './db-compat.js';
+import cloudinary from './cloudinary-config.js';
 
 const app = express();
 const PORT = process.env.PORT || 4002;
@@ -302,18 +303,36 @@ app.post('/api/photos', auth, upload.array('photos', 50), async (req, res) => {
   console.log('✅ Validaciones pasadas, procesando archivos...');
   
   try {
-    // Insertar todas las fotos subidas (SIN Cloudinary por ahora)
+    // Subir archivos a Cloudinary
+    const uploadedFiles = [];
     for (const file of req.files) {
-      console.log('💾 Insertando archivo:', file.filename);
-      const result = await query('INSERT INTO photos (user_id, filename, title, section_id) VALUES ($1, $2, $3, $4) RETURNING id', 
-        [req.user.id, file.filename, null, section_id]);
+      console.log('☁️ Subiendo archivo a Cloudinary:', file.originalname);
+      
+      // Subir a Cloudinary
+      const cloudinaryResult = await cloudinary.uploader.upload(file.path, {
+        folder: 'galeria-actuaria',
+        resource_type: 'auto'
+      });
+      
+      console.log('✅ Archivo subido a Cloudinary:', cloudinaryResult.secure_url);
+      
+      // Guardar URL de Cloudinary en la base de datos
+      const result = await query('INSERT INTO photos (user_id, filename, title, section_id, cloudinary_url) VALUES ($1, $2, $3, $4, $5) RETURNING id', 
+        [req.user.id, file.originalname, null, section_id, cloudinaryResult.secure_url]);
+      
       console.log('✅ Archivo insertado con ID:', result.rows[0].id);
+      uploadedFiles.push({
+        id: result.rows[0].id,
+        originalName: file.originalname,
+        cloudinaryUrl: cloudinaryResult.secure_url
+      });
     }
     
     console.log('🎉 Todas las fotos subidas exitosamente');
     res.json({ 
       ok: true, 
-      message: `${req.files.length} foto${req.files.length > 1 ? 's' : ''} subida${req.files.length > 1 ? 's' : ''} exitosamente`
+      message: `${req.files.length} foto${req.files.length > 1 ? 's' : ''} subida${req.files.length > 1 ? 's' : ''} exitosamente`,
+      files: uploadedFiles
     });
   } catch (err) {
     console.error('❌ Error al subir fotos:', err);
@@ -329,7 +348,8 @@ app.get('/api/photos', async (req, res) => {
   let sqlQuery = `
     SELECT photos.*, users.username, sections.name as section_name,
            (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
-           (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
+           (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
+           COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
     FROM photos 
     JOIN users ON users.id = photos.user_id 
     JOIN sections ON sections.id = photos.section_id
@@ -504,7 +524,8 @@ app.get('/api/photos/top', async (req, res) => {
         u.username,
         s.name as section_name,
         COALESCE(v.vote_count, 0) as votes,
-        COALESCE(c.comment_count, 0) as comments
+        COALESCE(c.comment_count, 0) as comments,
+        COALESCE(p.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', p.filename)) as image_url
       FROM photos p
       JOIN users u ON u.id = p.user_id 
       JOIN sections s ON s.id = p.section_id
