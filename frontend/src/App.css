@@ -3001,6 +3001,11 @@ nav {
     margin: 0;
   }
   
+  /* Icono de secciones más grande en móvil */
+  .seccion-icon {
+    font-size: 1.5em !important;
+  }
+  
   /* Formularios móvil */
   .form-container {
     padding: 1rem;
