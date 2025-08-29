@@ -857,28 +857,317 @@
   max-width: 100%;
 }
 
-/* Responsive para eliminación múltiple */
+/* ==================== RESPONSIVE DESIGN ADMIN PANEL ==================== */
+
+/* Mobile First - Base styles for mobile */
 @media (max-width: 768px) {
-  .bulk-actions {
+  /* Panel principal */
+  .admin-panel {
+    padding: 10px;
+    margin: 0;
+  }
+  
+  /* Header móvil */
+  .admin-header {
     flex-direction: column;
-    align-items: stretch;
+    gap: 15px;
+    text-align: center;
+    padding: 15px;
+  }
+  
+  .admin-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .admin-user-info {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .logout-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+  }
+  
+  /* Pestañas móvil */
+  .admin-tabs {
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 10px;
+  }
+  
+  .admin-tab {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+  
+  /* Contenido de pestañas */
+  .admin-tab-content {
+    padding: 15px 10px;
+  }
+  
+  /* Tablas móvil */
+  .admin-table {
+    font-size: 0.8rem;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 8px 5px;
+    font-size: 0.8rem;
+  }
+  
+  /* Hacer tablas scrollables en móvil */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Formularios móvil */
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+  
+  .form-group button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    margin-top: 10px;
+  }
+  
+  /* Modales móvil */
+  .modal-content {
+    width: 95%;
+    max-width: none;
+    margin: 10px;
+    padding: 15px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+    padding: 12px;
+  }
+  
+  /* Botones de acción móvil */
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-height: 44px; /* Touch target size */
+  }
+  
+  .btn-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-group button {
+    width: 100%;
+  }
+  
+  /* Estadísticas móvil */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 10px;
+  }
+  
+  .stat-card {
+    padding: 15px;
     text-align: center;
   }
   
+  .stat-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .stat-card .stat-value {
+    font-size: 1.8rem;
+  }
+  
+  /* Fotos en admin móvil */
+  .admin-photos-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .admin-photo-item {
+    padding: 10px;
+  }
+  
+  .admin-photo-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  /* Controles de selección móvil */
   .selection-controls {
-    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .selection-controls button {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  /* Eliminación múltiple móvil */
+  .bulk-actions {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
   }
   
   .bulk-delete-btn {
     width: 100%;
+    padding: 12px;
   }
   
   .selected-photos-list {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
   }
   
   .selected-photo-thumbnail {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
+  }
+  
+  /* Mensajes móvil */
+  .admin-message {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    margin: 10px 0;
+  }
+  
+  /* Logs móvil */
+  .logs-container {
+    padding: 10px;
+  }
+  
+  .log-entry {
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .admin-panel {
+    padding: 20px;
+  }
+  
+  .admin-photos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop grande */
+@media (min-width: 1025px) {
+  .admin-panel {
+    padding: 30px;
+  }
+  
+  .admin-photos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Orientación landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+  .admin-header {
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .admin-user-info {
+    flex-direction: row;
+  }
+  
+  .admin-tabs {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .admin-panel {
+    padding: 5px;
+  }
+  
+  .admin-header {
+    padding: 10px;
+  }
+  
+  .admin-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .admin-tab {
+    font-size: 0.8rem;
+    padding: 8px 6px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 6px 3px;
+    font-size: 0.7rem;
+  }
+  
+  .modal-content {
+    width: 98%;
+    margin: 5px;
+    padding: 10px;
+  }
+}
+
+/* Mejorar scroll en móviles */
+@media (max-width: 768px) {
+  .admin-panel {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Evitar scroll horizontal */
+  body, .admin-panel {
+    overflow-x: hidden;
+  }
+  
+  /* Hacer que las tablas sean responsive */
+  .admin-table {
+    min-width: 100%;
+  }
+  
+  .table-container {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
   }
 }
