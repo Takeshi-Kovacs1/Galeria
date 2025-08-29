@@ -879,14 +879,14 @@ h1 {
 }
 .perfil-ig-galeria {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr) !important;
   gap: 1rem;
   margin-top: 1.5rem;
   width: 100%;
 }
 
 .perfil-ig-galeria-grande {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr) !important;
   gap: 1rem;
   max-width: 100%;
 }
