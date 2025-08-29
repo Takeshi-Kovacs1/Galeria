@@ -831,6 +831,9 @@ const Perfil = React.memo(({ token, setVista }) => {
           setFotos(fotosRes.data);
           setStats(statsRes.data);
           setFotosMarcadas(fotosMarcadasRes.data);
+          console.log('📸 Fotos del usuario cargadas:', fotosRes.data);
+          console.log('📊 Estadísticas cargadas:', statsRes.data);
+          console.log('🏷️ Fotos marcadas cargadas:', fotosMarcadasRes.data);
           
           // Establecer foto de perfil desde el servidor
           if (profilePicRes.data.profile_picture) {
@@ -1046,6 +1049,22 @@ const Perfil = React.memo(({ token, setVista }) => {
 
   const fotosActuales = vistaPerfil === 'mis-fotos' ? fotos : fotosMarcadas;
 
+  // Función para recargar fotos marcadas
+  const recargarFotosMarcadas = useCallback(async () => {
+    try {
+      console.log('🔄 Recargando fotos marcadas...');
+      const fotosMarcadasRes = await axios.get(API + '/user/tagged-photos', { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      setFotosMarcadas(fotosMarcadasRes.data);
+      console.log('✅ Fotos marcadas recargadas:', fotosMarcadasRes.data);
+      return fotosMarcadasRes.data;
+    } catch (err) {
+      console.error('❌ Error recargando fotos marcadas:', err);
+      return [];
+    }
+  }, [token]);
+
   // Función para quitar foto marcada
   const quitarFotoMarcada = async (photoId) => {
     try {
@@ -1062,8 +1081,8 @@ const Perfil = React.memo(({ token, setVista }) => {
         // La foto fue desmarcada exitosamente
         console.log('✅ Foto desmarcada exitosamente');
         
-        // Actualizar el estado local
-        setFotosMarcadas(prev => prev.filter(foto => foto.id !== photoId));
+        // Recargar las fotos marcadas desde el servidor
+        await recargarFotosMarcadas();
         
         // Mostrar mensaje de éxito
         setSuccess('Foto quitada de "Donde aparezco" exitosamente');
@@ -1133,11 +1152,8 @@ const Perfil = React.memo(({ token, setVista }) => {
 
       // Recargar también las fotos marcadas para mantener sincronizados los contadores
       try {
-        const fotosMarcadasRes = await axios.get(API + '/user/tagged-photos', { 
-          headers: { Authorization: `Bearer ${token}` } 
-        });
-        setFotosMarcadas(fotosMarcadasRes.data);
-        console.log('✅ Fotos marcadas recargadas:', fotosMarcadasRes.data);
+        console.log('🔄 Recargando fotos marcadas después de eliminar foto...');
+        await recargarFotosMarcadas();
       } catch (err) {
         console.log('⚠️ No se pudieron recargar las fotos marcadas:', err);
       }
@@ -1213,13 +1229,22 @@ const Perfil = React.memo(({ token, setVista }) => {
           Donde aparezco ({fotosMarcadas.length})
         </button>
         {!modoSeleccion && vistaPerfil === 'donde-aparezco' && (
-          <button 
-            className="perfil-ig-descargar-btn" 
-            onClick={() => setModoSeleccion(true)}
-            title="Descargar múltiples fotos"
-          >
-            <FaDownload /> Descargar fotos
-          </button>
+          <>
+            <button 
+              className="perfil-ig-descargar-btn" 
+              onClick={() => setModoSeleccion(true)}
+              title="Descargar múltiples fotos"
+            >
+              <FaDownload /> Descargar fotos
+            </button>
+            <button 
+              className="perfil-ig-reload-btn" 
+              onClick={recargarFotosMarcadas}
+              title="Recargar fotos marcadas"
+            >
+              🔄 Recargar
+            </button>
+          </>
         )}
       </div>
 

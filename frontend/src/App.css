@@ -1148,6 +1148,36 @@ h1 {
   box-shadow: 0 2px 6px rgba(191,161,74,0.2);
 }
 
+.perfil-ig-reload-btn {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: fit-content;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(23,162,184,0.2);
+  margin-left: 10px;
+}
+
+.perfil-ig-reload-btn:hover {
+  background: #138496;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(23,162,184,0.3);
+}
+
+.perfil-ig-reload-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(23,162,184,0.2);
+}
+
 .perfil-ig-seleccion-controls {
   background: rgba(255,255,255,0.08);
   border-radius: 12px;
