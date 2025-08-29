@@ -189,7 +189,7 @@ const Login = React.memo(({ setToken, setUser, setVista }) => {
   );
 });
 
-const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sections }) => {
+const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sections, setFotos }) => {
   const [fotosMarcadas, setFotosMarcadas] = useState(new Set());
   const [fotosVotadas, setFotosVotadas] = useState(new Set());
 
@@ -1821,7 +1821,8 @@ export default function App() {
                         onVotar={votar} 
                         usuarioId={usuario?.id} 
                         selectedSection={selectedSection} 
-                        sections={sections} 
+                        sections={sections}
+                        setFotos={setFotos}
                       />
                     )}
                     
@@ -1832,7 +1833,8 @@ export default function App() {
                         onVotar={votar} 
                         usuarioId={usuario?.id} 
                         selectedSection={null} 
-                        sections={sections} 
+                        sections={sections}
+                        setFotos={setFotos}
                       />
                     )}
                     

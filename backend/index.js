@@ -847,7 +847,7 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
         (SELECT COUNT(*) FROM users WHERE role != 'admin') as total_users,
         (SELECT COUNT(*) FROM photos) as total_photos,
         (SELECT COUNT(*) FROM sections) as total_sections,
-        (SELECT COUNT(*) FROM users WHERE is_banned = 1) as banned_users
+        (SELECT COUNT(*) FROM users WHERE is_banned = true) as banned_users
     `);
     
     res.json({ stats: statsResult.rows[0] });
