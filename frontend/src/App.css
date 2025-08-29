@@ -3238,37 +3238,53 @@ img {
     margin: 0;
     border-radius: 0;
     min-height: calc(100vh - 80px);
+    background: transparent;
   }
   
   .perfil-ig-header {
     padding: 1rem 0.5rem;
     margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-direction: row;
+    text-align: left;
   }
   
   .perfil-ig-header-row {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: row;
+    text-align: left;
     gap: 1rem;
+    align-items: flex-start;
   }
   
   .perfil-ig-foto {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
+    width: 80px;
+    height: 80px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  
+  .perfil-ig-info {
+    flex: 1;
+    margin-left: 0;
+    padding-top: 0;
   }
   
   .perfil-ig-info h2 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin-bottom: 0.5rem;
+    text-align: left;
   }
   
   .perfil-ig-stats {
     display: flex;
-    justify-content: space-around;
-    gap: 1rem;
+    justify-content: space-between;
+    gap: 0.5rem;
     font-size: 0.9rem;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 0.5rem;
+    width: 100%;
   }
   
   .stat-item {
@@ -3276,129 +3292,129 @@ img {
     flex-direction: column;
     align-items: center;
     gap: 0.2rem;
+    flex: 1;
   }
   
   .stat-item strong {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: #333;
     margin-bottom: 2px;
+    font-weight: bold;
   }
   
   .stat-item span {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #666;
     text-transform: lowercase;
   }
   
   .perfil-ig-tabs {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
     padding: 0.5rem;
+    overflow-x: auto;
+    justify-content: flex-start;
   }
   
   .perfil-ig-tab {
-    width: 100%;
-    padding: 0.8rem;
-    font-size: 0.9rem;
+    width: auto;
+    min-width: fit-content;
+    white-space: nowrap;
   }
   
+  /* Galería móvil - 3 columnas */
   .perfil-ig-galeria {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
-    padding: 0.5rem;
+    margin-top: 1rem;
+    padding: 0 0.5rem;
   }
   
+  .perfil-ig-galeria-grande {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  /* Fotos individuales sin fondo negro */
   .perfil-ig-foto-gal {
-    max-width: none;
-    width: 100%;
+    aspect-ratio: 1/1;
+    min-width: unset;
+    min-height: unset;
+    max-width: 100%;
+    max-height: 100%;
+    background: transparent;
+    border-radius: 8px;
+    box-shadow: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .perfil-ig-foto-gal:hover {
+    transform: scale(1.02);
   }
   
   .perfil-ig-foto-gal img {
-    height: 120px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    background: transparent;
+  }
+  
+  /* Overlay sin fondo negro */
+  .perfil-ig-foto-overlay {
+    background: rgba(0,0,0,0.3);
     border-radius: 8px;
   }
   
+  /* Botones de acción más pequeños */
+  .perfil-ig-foto-perfil-btn,
+  .perfil-ig-foto-perfil-btn-select {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    bottom: 5px;
+  }
+  
+  /* Controles de selección más compactos */
   .perfil-ig-seleccion-controls {
-    padding: 0.8rem;
-    margin: 0.8rem 0;
+    padding: 0.5rem;
+    margin: 0.5rem;
   }
   
   .perfil-ig-seleccion-buttons {
-    flex-direction: column;
     gap: 0.5rem;
   }
   
   .perfil-ig-seleccion-buttons button {
-    width: 100%;
-    padding: 0.8rem;
-    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
   }
   
-  /* Botones de descarga y recarga en móvil */
-  .perfil-ig-descargar-btn,
-  .perfil-ig-reload-btn {
+  /* Botón de descarga más compacto */
+  .perfil-ig-descargar-btn {
+    position: relative;
+    right: auto;
+    margin: 0.5rem auto;
+    max-width: 100%;
     width: 100%;
-    margin: 5px 0;
-    padding: 0.8rem;
-    font-size: 0.9rem;
   }
   
-  /* Estado vacío en móvil */
-  .perfil-ig-empty-state {
+  /* Modal más compacto */
+  .perfil-ig-modal-content {
     padding: 1rem;
-    text-align: center;
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
   }
   
-  .perfil-ig-empty-state h3 {
-    font-size: 1.2rem;
-  }
-  
-  .perfil-ig-empty-state p {
-    font-size: 0.9rem;
-  }
-  
-  /* Overlay de fotos en móvil */
-  .perfil-ig-foto-overlay {
-    padding: 0.5rem;
-  }
-  
-  .perfil-ig-likes-overlay {
-    font-size: 0.8rem;
-  }
-  
-  .perfil-ig-foto-owner {
-    font-size: 0.8rem;
-  }
-  
-  /* Botón de descargar abajo */
-  .perfil-ig-descargar-section {
-    text-align: center;
-    padding: 1rem 0;
-    margin-top: 1rem;
-    border-top: 1px solid #f0f0f0;
-  }
-  
-  .perfil-ig-descargar-btn-bottom {
-    background: #bfa14a;
-    color: #23283a;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 25px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 15px rgba(191,161,74,0.3);
-  }
-  
-  .perfil-ig-descargar-btn-bottom:hover {
-    background: #e6c75e;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(191,161,74,0.4);
+  .perfil-ig-modal-content img {
+    max-width: 100%;
+    height: auto;
   }
 }
 
