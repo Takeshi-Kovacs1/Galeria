@@ -377,7 +377,7 @@ h1 {
 @media (max-width: 768px) {
   .galeria-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
+    gap: 1rem;
     padding: 0 0.5rem;
     margin: 0;
   }
@@ -388,9 +388,9 @@ h1 {
     margin: 0;
   }
   
-  /* Mover segunda columna más a la izquierda */
+  /* Separación entre columnas */
   .galeria-grid .foto:nth-child(2n) {
-    margin-left: -0.5rem;
+    margin-left: 0.5rem;
   }
   
   /* Primera columna con margen derecho */
@@ -950,6 +950,8 @@ h1 {
   height: 100%;
   object-fit: cover;
   border-radius: 18px;
+  display: block;
+  background: #f0f0f0;
 }
 .perfil-ig-foto-cam {
   position: absolute;
@@ -2524,14 +2526,24 @@ h1 {
   align-items: flex-start;
   gap: 30px;
   text-align: left;
+  padding: 20px;
 }
 
 .perfil-ig-foto {
   flex-shrink: 0;
+  width: 120px;
+  height: 120px;
 }
 
 .perfil-ig-info {
   flex: 1;
+  padding-top: 10px;
+}
+
+.perfil-ig-info h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #333;
 }
 
 .perfil-ig-stats {
@@ -2844,26 +2856,41 @@ nav {
 nav button {
   flex: 1;
   min-width: 0;
-  padding: 0.5rem 0.2rem;
-  font-size: 0.75rem;
+  padding: 0.6rem 0.3rem;
+  font-size: 0.8rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70px;
-  margin: 0 0.1rem;
+  max-width: 75px;
+  margin: 0 0.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+/* Iconos en botones */
+nav button svg {
+  font-size: 1.2rem;
+  margin-bottom: 0.1rem;
+}
+
+/* Botón de subir foto más grande */
+nav button:nth-child(3) svg {
+  font-size: 1.4rem;
 }
 
 /* Ajustar botón admin para que quepa */
 nav button:last-child {
-  font-size: 0.65rem;
-  padding: 0.5rem 0.1rem;
-  max-width: 65px;
+  font-size: 0.7rem;
+  padding: 0.6rem 0.2rem;
+  max-width: 70px;
 }
 
 /* Reducir espacio entre botones */
 nav {
-  gap: 0.2rem;
-  padding: 0.4rem;
+  gap: 0.3rem;
+  padding: 0.5rem;
 }
   
   nav button {
