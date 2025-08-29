@@ -256,10 +256,19 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
         }
         return nuevo;
       });
+      
+      // Actualizar el contador de votos en la foto local
+      setFotos(prevFotos => 
+        prevFotos.map(foto => 
+          foto.id === fotoId 
+            ? { ...foto, votes: fotosVotadas.has(fotoId) ? (foto.votes || 0) - 1 : (foto.votes || 0) + 1 }
+            : foto
+        )
+      );
     } catch (err) {
       console.error('Error votando:', err);
     }
-  }, [usuarioId, onVotar]);
+  }, [usuarioId, onVotar, fotosVotadas]);
 
   // Obtener nombre de la sección actual
   const currentSection = selectedSection ? sections.find(s => s.id == selectedSection) : null;
@@ -1187,21 +1196,23 @@ const Perfil = React.memo(({ token, setVista }) => {
   return (
     <div className="perfil-ig">
       <div className="perfil-ig-header">
-        <div className="perfil-ig-foto" onMouseEnter={()=>setCambiarPerfil(true)} onMouseLeave={()=>setCambiarPerfil(false)}>
-          <img src={fotoPerfilSrc} alt="Foto de perfil" loading="lazy" />
-          <input type="file" accept="image/*" style={{display:'none'}} ref={fileInputRef} onChange={handleFileChange} />
-          {cambiarPerfil && (
-            <div className="perfil-ig-foto-cam" onClick={()=>fileInputRef.current.click()} title="Cambiar foto de perfil">
-              <FaCamera size={32} />
+        <div className="perfil-ig-header-row">
+          <div className="perfil-ig-foto" onMouseEnter={()=>setCambiarPerfil(true)} onMouseLeave={()=>setCambiarPerfil(false)}>
+            <img src={fotoPerfilSrc} alt="Foto de perfil" loading="lazy" />
+            <input type="file" accept="image/*" style={{display:'none'}} ref={fileInputRef} onChange={handleFileChange} />
+            {cambiarPerfil && (
+              <div className="perfil-ig-foto-cam" onClick={()=>fileInputRef.current.click()} title="Cambiar foto de perfil">
+                <FaCamera size={32} />
+              </div>
+            )}
+          </div>
+          <div className="perfil-ig-info">
+            <h2>@{usuario.username}</h2>
+            <div className="perfil-ig-stats">
+              <span><strong>{stats.total_photos}</strong><br/>publicaciones</span>
+              <span><strong>{stats.total_likes}</strong><br/>likes totales</span>
+              <span><strong>{fotosMarcadas.length}</strong><br/>fotos donde aparezco</span>
             </div>
-          )}
-        </div>
-        <div className="perfil-ig-info">
-          <h2>@{usuario.username}</h2>
-          <div className="perfil-ig-stats">
-            <span>{stats.total_photos} publicaciones</span>
-            <span>{stats.total_likes} likes totales</span>
-            <span>{fotosMarcadas.length} fotos donde aparezco</span>
           </div>
         </div>
       </div>
@@ -1229,22 +1240,13 @@ const Perfil = React.memo(({ token, setVista }) => {
           Donde aparezco ({fotosMarcadas.length})
         </button>
         {!modoSeleccion && vistaPerfil === 'donde-aparezco' && (
-          <>
-            <button 
-              className="perfil-ig-descargar-btn" 
-              onClick={() => setModoSeleccion(true)}
-              title="Descargar múltiples fotos"
-            >
-              <FaDownload /> Descargar fotos
-            </button>
-            <button 
-              className="perfil-ig-reload-btn" 
-              onClick={recargarFotosMarcadas}
-              title="Recargar fotos marcadas"
-            >
-              🔄 Recargar
-            </button>
-          </>
+          <button 
+            className="perfil-ig-descargar-btn" 
+            onClick={() => setModoSeleccion(true)}
+            title="Descargar múltiples fotos"
+          >
+            <FaDownload /> Descargar fotos
+          </button>
         )}
       </div>
 
@@ -1348,6 +1350,19 @@ const Perfil = React.memo(({ token, setVista }) => {
               )}
             </div>
           ))
+        )}
+        
+        {/* Botón de descargar abajo de las fotos en "Donde aparezco" */}
+        {vistaPerfil === 'donde-aparezco' && fotosActuales.length > 0 && (
+          <div className="perfil-ig-descargar-section">
+            <button 
+              className="perfil-ig-descargar-btn-bottom" 
+              onClick={() => setModoSeleccion(true)}
+              title="Descargar múltiples fotos"
+            >
+              <FaDownload /> Descargar fotos seleccionadas
+            </button>
+          </div>
         )}
       </div>
 
