@@ -1229,7 +1229,7 @@ const Perfil = React.memo(({ token, setVista }) => {
             <input type="file" accept="image/*" style={{display:'none'}} ref={fileInputRef} onChange={handleFileChange} />
             {cambiarPerfil && (
               <div className="perfil-ig-foto-cam" onClick={()=>fileInputRef.current.click()} title="Cambiar foto de perfil">
-                <FaCamera size={32} />
+                <FaCamera />
               </div>
             )}
           </div>

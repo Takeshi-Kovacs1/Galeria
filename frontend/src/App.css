@@ -268,7 +268,7 @@ h1 {
 }
 
 .seccion-icon {
-  font-size: 0.9em;
+  font-size: 1em;
   color: #007bff;
 }
 
@@ -969,6 +969,10 @@ h1 {
   transition: opacity 0.2s, background 0.2s;
   opacity: 0;
   pointer-events: none;
+}
+
+.perfil-ig-foto-cam svg {
+  font-size: 0.9rem;
 }
 .perfil-ig-foto:hover .perfil-ig-foto-cam {
   opacity: 1;
