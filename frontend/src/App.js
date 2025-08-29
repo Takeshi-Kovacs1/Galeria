@@ -1024,9 +1024,6 @@ const Perfil = React.memo(({ token, setVista }) => {
 
       console.log('✅ Descarga de imágenes individuales completada exitosamente');
       
-      // Mostrar mensaje de éxito
-      alert(`Se descargaron ${fotosParaDescargar.length} imagen(es) individualmente. Revisa tu carpeta de descargas.`);
-
       // Salir del modo selección
       salirModoSeleccion();
     } catch (err) {
