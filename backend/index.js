@@ -25,6 +25,7 @@ if (isEmailConfigured()) {
     console.log('✅ Configuración de email válida');
   } catch (err) {
     console.error('❌ Error configurando email:', err);
+   
     transporter = null;
   }
 } else {
@@ -419,14 +420,50 @@ app.post('/api/photos/:id/vote', auth, async (req, res) => {
     if (existingVote.rows.length > 0) {
       // Si ya votó, quitar el voto
       await query('DELETE FROM votes WHERE user_id = $1 AND photo_id = $2', [userId, photoId]);
-      res.json({ ok: true, action: 'unvoted' });
+      
+      // Obtener el nuevo conteo de votos
+      const voteCountResult = await query('SELECT COUNT(*) as count FROM votes WHERE photo_id = $1', [photoId]);
+      const newVoteCount = parseInt(voteCountResult.rows[0].count);
+      
+      res.json({ 
+        ok: true, 
+        action: 'unvoted', 
+        voteCount: newVoteCount,
+        userVoted: false
+      });
     } else {
       // Si no ha votado, agregar el voto
       await query('INSERT INTO votes (user_id, photo_id) VALUES ($1, $2)', [userId, photoId]);
-      res.json({ ok: true, action: 'voted' });
+      
+      // Obtener el nuevo conteo de votos
+      const voteCountResult = await query('SELECT COUNT(*) as count FROM votes WHERE photo_id = $1', [photoId]);
+      const newVoteCount = parseInt(voteCountResult.rows[0].count);
+      
+      res.json({ 
+        ok: true, 
+        action: 'voted', 
+        voteCount: newVoteCount,
+        userVoted: true
+      });
     }
   } catch (err) {
     console.error('❌ Error votando por foto:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Verificar si un usuario ya votó por una foto
+app.get('/api/photos/:id/vote-status', auth, async (req, res) => {
+  try {
+    const photoId = req.params.id;
+    const userId = req.user.id;
+    
+    const voteResult = await query('SELECT * FROM votes WHERE user_id = $1 AND photo_id = $2', [userId, photoId]);
+    const hasVoted = voteResult.rows.length > 0;
+    
+    res.json({ hasVoted });
+  } catch (err) {
+    console.error('❌ Error verificando estado del voto:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

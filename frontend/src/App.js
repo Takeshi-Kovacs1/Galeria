@@ -193,29 +193,45 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
   const [fotosMarcadas, setFotosMarcadas] = useState(new Set());
   const [fotosVotadas, setFotosVotadas] = useState(new Set());
 
-  // Cargar fotos marcadas al montar el componente
+  // Cargar fotos marcadas y votadas al montar el componente
   useEffect(() => {
     if (usuarioId) {
-      const cargarFotosMarcadas = async () => {
+      const cargarEstadoFotos = async () => {
         try {
-          const promises = fotos.map(foto => 
+          // Cargar fotos marcadas
+          const promisesMarcadas = fotos.map(foto => 
             axios.get(API + `/photos/${foto.id}/tagged`, { 
               headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } 
             })
           );
-          const responses = await Promise.all(promises);
+          const responsesMarcadas = await Promise.all(promisesMarcadas);
           const marcadas = new Set();
-          responses.forEach((response, index) => {
+          responsesMarcadas.forEach((response, index) => {
             if (response.data.tagged) {
               marcadas.add(fotos[index].id);
             }
           });
           setFotosMarcadas(marcadas);
+          
+          // Cargar fotos votadas
+          const promisesVotadas = fotos.map(foto => 
+            axios.get(API + `/photos/${foto.id}/vote-status`, { 
+              headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } 
+            })
+          );
+          const responsesVotadas = await Promise.all(promisesVotadas);
+          const votadas = new Set();
+          responsesVotadas.forEach((response, index) => {
+            if (response.data.hasVoted) {
+              votadas.add(fotos[index].id);
+            }
+          });
+          setFotosVotadas(votadas);
         } catch (err) {
-          console.error('Error cargando fotos marcadas:', err);
+          console.error('Error cargando estado de fotos:', err);
         }
       };
-      cargarFotosMarcadas();
+      cargarEstadoFotos();
     }
   }, [fotos, usuarioId]);
 
@@ -245,39 +261,40 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
     if (!usuarioId) return;
     
     try {
-      await onVotar(fotoId);
+      const response = await onVotar(fotoId);
       
-      // Cambiar el estado local del voto
-      setFotosVotadas(prev => {
-        const nuevo = new Set(prev);
-        if (nuevo.has(fotoId)) {
-          nuevo.delete(fotoId);
-        } else {
-          nuevo.add(fotoId);
-        }
-        return nuevo;
-      });
-      
-      // Actualizar el contador de votos en la foto local
-      setFotos(prevFotos => 
-        prevFotos.map(foto => 
-          foto.id === fotoId 
-            ? { 
-                ...foto, 
-                votes: fotosVotadas.has(fotoId) 
-                  ? Math.max(0, (foto.votes || 0) - 1) 
-                  : (foto.votes || 0) + 1 
-              }
-            : foto
-        )
-      );
-      
-      console.log('✅ Voto procesado para foto:', fotoId);
-      console.log('✅ Estado de fotosVotadas:', fotosVotadas);
+      if (response && response.data && response.data.ok) {
+        // Cambiar el estado local del voto basado en la respuesta del backend
+        setFotosVotadas(prev => {
+          const nuevo = new Set(prev);
+          if (response.data.userVoted) {
+            nuevo.add(fotoId);
+          } else {
+            nuevo.delete(fotoId);
+          }
+          return nuevo;
+        });
+        
+        // Actualizar el contador de votos en la foto local con el valor real del backend
+        setFotos(prevFotos => 
+          prevFotos.map(foto => 
+            foto.id === fotoId 
+              ? { 
+                  ...foto, 
+                  votes: response.data.voteCount
+                }
+              : foto
+          )
+        );
+        
+        console.log('✅ Voto procesado para foto:', fotoId);
+        console.log('✅ Respuesta del backend:', response.data);
+        console.log('✅ Nuevo conteo de votos:', response.data.voteCount);
+      }
     } catch (err) {
       console.error('Error votando:', err);
     }
-  }, [usuarioId, onVotar, fotosVotadas]);
+  }, [usuarioId, onVotar]);
 
   // Obtener nombre de la sección actual
   const currentSection = selectedSection ? sections.find(s => s.id == selectedSection) : null;
@@ -1693,7 +1710,7 @@ export default function App() {
   const votar = useCallback(async (id) => {
     if (!token) return;
     try {
-      await axios.post(API + '/photos/' + id + '/vote', {}, { headers: { Authorization: 'Bearer ' + token } });
+      const response = await axios.post(API + '/photos/' + id + '/vote', {}, { headers: { Authorization: 'Bearer ' + token } });
       
       // Recargar fotos de la sección actual y actualizar conteos
       try {
@@ -1721,8 +1738,11 @@ export default function App() {
       } catch (err) {
         console.error('Error actualizando conteos después de votar:', err);
       }
+      
+      return response; // Devolver la respuesta para que handleVotar la use
     } catch (err) {
       console.error('Error votando:', err);
+      throw err;
     }
   }, [token, sections, selectedSection, handleShowAllPhotos, handleSectionClick]);
 
