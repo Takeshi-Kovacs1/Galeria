@@ -59,7 +59,19 @@ nav button:hover {
   color: #ffffff;
 }
 nav button svg {
-  font-size: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Icono de la cámara (subir foto) más pequeño */
+nav button:has(svg[data-icon="camera"]) svg,
+nav button:has(svg[data-icon="FaCamera"]) svg {
+  font-size: 0.8rem;
+}
+
+/* Icono del folder (secciones) más grande */
+nav button:contains("📁") svg,
+nav button:has(span:contains("📁")) {
+  font-size: 1.1rem;
 }
 h1 {
   text-align: center;
