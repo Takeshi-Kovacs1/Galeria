@@ -942,6 +942,7 @@ h1 {
 }
 .perfil-ig-likes-overlay svg {
   color: #ff6b6b;
+  font-size: 0.9rem;
 }
 .perfil-ig-foto-gal img {
   width: 100%;
@@ -1183,6 +1184,10 @@ h1 {
   right: 0;
 }
 
+.perfil-ig-descargar-btn svg {
+  font-size: 0.9rem;
+}
+
 .perfil-ig-descargar-btn:hover {
   background: #e6c75e;
   transform: translateY(-2px);
@@ -1256,6 +1261,13 @@ h1 {
   cursor: pointer;
   font-weight: bold;
   transition: all 0.2s ease;
+}
+
+.perfil-ig-seleccion-buttons button svg {
+  font-size: 0.9rem;
+}
+
+.perfil-ig-seleccion-buttons button {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;

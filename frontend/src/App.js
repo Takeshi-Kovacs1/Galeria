@@ -1345,7 +1345,7 @@ const Perfil = React.memo(({ token, setVista }) => {
               <img src={foto.image_url || UPLOADS_URL + '/' + foto.filename} alt={foto.title} loading="lazy" />
               <div className="perfil-ig-foto-overlay">
                 <div className="perfil-ig-likes-overlay">
-                  <FaHeart size={24} />
+                  <FaHeart />
                   <span>{foto.votes || 0}</span>
                 </div>
                 {vistaPerfil === 'donde-aparezco' && (
