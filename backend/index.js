@@ -316,7 +316,7 @@ app.post('/api/photos', auth, upload.array('photos', 50), async (req, res) => {
 app.get('/api/photos', async (req, res) => {
   const { section_id } = req.query;
   
-  let query = `
+  let sqlQuery = `
     SELECT photos.*, users.username, sections.name as section_name,
            (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
            (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
@@ -328,14 +328,14 @@ app.get('/api/photos', async (req, res) => {
   let params = [];
   
   if (section_id) {
-    query += ' WHERE photos.section_id = ?';
+    sqlQuery += ' WHERE photos.section_id = $1';
     params.push(section_id);
   }
   
-  query += ' ORDER BY photos.created_at DESC';
+  sqlQuery += ' ORDER BY photos.created_at DESC';
   
   try {
-    const photosResult = await query(query, params);
+    const photosResult = await query(sqlQuery, params);
     res.json(photosResult.rows);
   } catch (err) {
     console.error('❌ Error obteniendo fotos:', err);
