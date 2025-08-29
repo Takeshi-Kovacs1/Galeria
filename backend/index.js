@@ -66,6 +66,15 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Inicializar directorio uploads
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('✅ Directorio uploads creado:', uploadsDir);
+} else {
+  console.log('✅ Directorio uploads ya existe:', uploadsDir);
+}
+
 // Inicializar base de datos
 // Inicializar base de datos PostgreSQL
 (async () => {
