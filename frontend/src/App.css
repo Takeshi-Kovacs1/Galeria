@@ -368,18 +368,20 @@ h1 {
 .galeria-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.2rem;
+  gap: 1rem;
   margin-bottom: 2rem;
   padding-bottom: 2rem;
+  justify-items: center;
 }
 
 /* Responsive para móvil - 2 columnas en galería */
 @media (max-width: 768px) {
   .galeria-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    padding: 0 0.5rem;
+    gap: 0.8rem;
+    padding: 0 0.8rem;
     margin: 0;
+    justify-items: center;
   }
   
   .galeria-grid .foto {
@@ -388,21 +390,20 @@ h1 {
     margin: 0;
   }
   
-  /* Separación entre columnas */
+  /* Eliminar márgenes manuales que causan problemas */
   .galeria-grid .foto:nth-child(2n) {
-    margin-left: 0.5rem;
+    margin-left: 0;
   }
   
-  /* Primera columna con margen derecho */
   .galeria-grid .foto:nth-child(2n+1) {
-    margin-right: 0.5rem;
+    margin-right: 0;
   }
 }
 .foto {
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 0.8rem;
+  padding: 0.5rem;
   text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
   border: 1px solid #dbdbdb;
@@ -415,10 +416,10 @@ h1 {
 .foto img {
   width: 100%;
   max-width: 160px;
-  height: 160px;
+  height: 150px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.5rem;
 }
 .foto-info {
   display: flex;
@@ -431,13 +432,13 @@ h1 {
   background: #0095f6;
   color: #ffffff;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 8px;
   font-size: 0.8rem;
   cursor: pointer;
   font-weight: bold;
   transition: background 0.2s;
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
 }
 
 .foto-info button:hover {
@@ -448,13 +449,13 @@ h1 {
   background: #262626 !important;
   color: white !important;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 8px;
   font-size: 0.8rem;
   cursor: pointer;
   font-weight: bold;
   transition: all 0.2s;
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
 }
 
 .foto-vote-btn:hover {
@@ -473,8 +474,8 @@ h1 {
 
 .foto-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
   justify-content: center;
 }
 
