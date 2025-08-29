@@ -59,7 +59,7 @@ nav button:hover {
   color: #ffffff;
 }
 nav button svg {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 h1 {
   text-align: center;
@@ -268,7 +268,7 @@ h1 {
 }
 
 .seccion-icon {
-  font-size: 1em;
+  font-size: 1.2em;
   color: #007bff;
 }
 
@@ -972,7 +972,7 @@ h1 {
 }
 
 .perfil-ig-foto-cam svg {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 .perfil-ig-foto:hover .perfil-ig-foto-cam {
   opacity: 1;
