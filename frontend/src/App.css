@@ -897,16 +897,14 @@ h1 {
 }
 .perfil-ig-foto-gal {
   width: 100%;
-  height: 400px;
+  height: auto;
   min-width: 300px;
   max-width: 100%;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   position: relative;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
@@ -947,13 +945,12 @@ h1 {
 }
 .perfil-ig-foto-gal img {
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 300px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 12px;
   display: block;
   margin: 0;
-  background: #f8f9fa;
 }
 .perfil-ig-foto-cam {
   position: absolute;
@@ -3367,16 +3364,14 @@ img {
   /* Fotos individuales móviles - aprovechan todo el ancho */
   .perfil-ig-foto-gal {
     width: 100%;
-    height: 350px;
+    height: auto;
     min-width: 250px;
     max-width: 100%;
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     position: relative;
     cursor: pointer;
     transition: transform 0.2s;
@@ -3389,10 +3384,10 @@ img {
   .perfil-ig-foto-gal img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     border-radius: 8px;
     display: block;
-    background: #f8f9fa;
+    background: transparent;
   }
   
   /* Overlay sin fondo negro */
