@@ -59,19 +59,7 @@ nav button:hover {
   color: #ffffff;
 }
 nav button svg {
-  font-size: 0.9rem;
-}
-
-/* Icono de la cámara (subir foto) más pequeño */
-nav button:has(svg[data-icon="camera"]) svg,
-nav button:has(svg[data-icon="FaCamera"]) svg {
-  font-size: 0.8rem;
-}
-
-/* Icono del folder (secciones) más grande */
-nav button:contains("📁") svg,
-nav button:has(span:contains("📁")) {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 h1 {
   text-align: center;
@@ -2920,13 +2908,13 @@ nav button {
 
 /* Iconos en botones */
 nav button svg {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 0.1rem;
 }
 
-/* Botón de subir foto más grande */
+/* Botón de subir foto más pequeño */
 nav button:nth-child(3) svg {
-  font-size: 1.4rem;
+  font-size: 0.9rem;
 }
 
 /* Ajustar botón admin para que quepa */
