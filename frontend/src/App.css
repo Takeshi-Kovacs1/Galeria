@@ -372,6 +372,20 @@ h1 {
   margin-bottom: 2rem;
   padding-bottom: 2rem;
 }
+
+/* Responsive para móvil - 2 columnas en galería */
+@media (max-width: 768px) {
+  .galeria-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    padding: 0 0.5rem;
+  }
+  
+  .galeria-grid .foto {
+    max-width: none;
+    width: 100%;
+  }
+}
 .foto {
   background: #ffffff;
   border-radius: 8px;
@@ -2749,28 +2763,46 @@ h1 {
   }
   
   /* Navegación móvil */
-  nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    height: auto;
-    max-height: none;
-    margin: 0;
-    border-radius: 0;
-    border-top: 1px solid #dbdbdb;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    z-index: 1000;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-  }
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: auto;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  border-radius: 0;
+  border-top: 1px solid #dbdbdb;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* Botones de navegación móvil */
+nav button {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.3rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+/* Ajustar botón admin para que quepa */
+nav button:last-child {
+  font-size: 0.7rem;
+  padding: 0.5rem 0.2rem;
+}
   
   nav button {
     flex: 1;
@@ -3107,8 +3139,153 @@ img {
   background: rgba(255, 193, 7, 1);
   transform: scale(1.1);
   box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
-} 
+}
 
+/* ==================== RESPONSIVE DESIGN PERFIL ==================== */
 
+/* Perfil responsive para móvil */
+@media (max-width: 768px) {
+  .perfil-ig {
+    padding: 0.5rem;
+    margin: 0;
+    border-radius: 0;
+    min-height: calc(100vh - 80px);
+  }
+  
+  .perfil-ig-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .perfil-ig-foto {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+  }
+  
+  .perfil-ig-info h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .perfil-ig-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .perfil-ig-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .perfil-ig-tab {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .perfil-ig-galeria {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    padding: 0.5rem;
+  }
+  
+  .perfil-ig-foto-gal {
+    max-width: none;
+    width: 100%;
+  }
+  
+  .perfil-ig-foto-gal img {
+    height: 150px;
+  }
+  
+  .perfil-ig-seleccion-controls {
+    padding: 0.8rem;
+    margin: 0.8rem 0;
+  }
+  
+  .perfil-ig-seleccion-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .perfil-ig-seleccion-buttons button {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Botones de descarga y recarga en móvil */
+  .perfil-ig-descargar-btn,
+  .perfil-ig-reload-btn {
+    width: 100%;
+    margin: 5px 0;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Estado vacío en móvil */
+  .perfil-ig-empty-state {
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .perfil-ig-empty-state h3 {
+    font-size: 1.2rem;
+  }
+  
+  .perfil-ig-empty-state p {
+    font-size: 0.9rem;
+  }
+  
+  /* Overlay de fotos en móvil */
+  .perfil-ig-foto-overlay {
+    padding: 0.5rem;
+  }
+  
+  .perfil-ig-likes-overlay {
+    font-size: 0.8rem;
+  }
+  
+  .perfil-ig-foto-owner {
+    font-size: 0.8rem;
+  }
+}
 
- 
+/* Perfil responsive para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .perfil-ig {
+    padding: 0.3rem;
+  }
+  
+  .perfil-ig-header {
+    padding: 0.8rem 0.3rem;
+  }
+  
+  .perfil-ig-foto {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .perfil-ig-info h2 {
+    font-size: 1.1rem;
+  }
+  
+  .perfil-ig-stats {
+    font-size: 0.8rem;
+  }
+  
+  .perfil-ig-galeria {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .perfil-ig-foto-gal img {
+    height: 120px;
+  }
+}
