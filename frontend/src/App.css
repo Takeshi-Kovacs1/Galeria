@@ -1080,10 +1080,25 @@ h1 {
   margin-bottom: 1rem;
   justify-content: flex-start;
 }
-.perfil-ig-stats span {
-  color: #ffb347;
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-item strong {
   font-size: 1.2rem;
+  color: #ffb347;
   font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+
+.stat-item span {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: lowercase;
 }
 .perfil-ig-modal-comments {
   flex: 1;
@@ -3325,19 +3340,23 @@ img {
   /* Galería móvil - 3 columnas */
   .perfil-ig-galeria {
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    gap: 0.3rem;
     margin-top: 1rem;
-    padding: 0 0.5rem;
+    padding: 0 0.3rem;
+    width: 100%;
   }
   
   .perfil-ig-galeria-grande {
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    gap: 0.3rem;
+    width: 100%;
   }
   
-  /* Fotos individuales sin fondo negro */
+  /* Fotos individuales sin fondo negro - tamaño fijo */
   .perfil-ig-foto-gal {
     aspect-ratio: 1/1;
+    width: 100%;
+    height: auto;
     min-width: unset;
     min-height: unset;
     max-width: 100%;

@@ -1237,15 +1237,15 @@ const Perfil = React.memo(({ token, setVista }) => {
             <div className="perfil-ig-stats">
               <div className="stat-item">
                 <strong>{stats.total_photos}</strong>
-                <span>publicaciones</span>
+                <span>posts</span>
               </div>
               <div className="stat-item">
                 <strong>{stats.total_likes}</strong>
-                <span>likes totales</span>
+                <span>likes</span>
               </div>
               <div className="stat-item">
                 <strong>{fotosMarcadas.length}</strong>
-                <span>fotos donde aparezco</span>
+                <span>marcadas</span>
               </div>
             </div>
           </div>
