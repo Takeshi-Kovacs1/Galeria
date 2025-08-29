@@ -160,31 +160,31 @@ function adminAuth(req, res, next) {
 // Función para registrar logs de admin
 async function logAdminAction(adminId, action, targetType, targetId, details) {
   try {
-    await db.run('INSERT INTO admin_logs (admin_id, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)', 
+    await query('INSERT INTO admin_logs (admin_id, action, target_type, target_id, details) VALUES ($1, $2, $3, $4, $5)', 
       [adminId, action, targetType, targetId, details]);
   } catch (err) {
-    console.error('Error registrando log de admin:', err);
+    console.error('❌ Error registrando log de admin:', err);
   }
 }
 
 // Registro
 app.post('/api/register', async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) return res.status(400).json({ error: 'Faltan datos' });
-  
-  // Validar formato de email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: 'Formato de email inválido' });
-  }
-  
-  const hash = await bcrypt.hash(password, 10);
   try {
-    await db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash]);
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) return res.status(400).json({ error: 'Faltan datos' });
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Formato de email inválido' });
+    }
+    
+    const hash = await bcrypt.hash(password, 10);
+    await query('INSERT INTO users (username, email, password) VALUES ($1, $2, $3)', [username, email, hash]);
     
     res.json({ ok: true, message: 'Usuario registrado exitosamente.' });
   } catch (err) {
-    if (err.message.includes('UNIQUE constraint failed')) {
+    if (err.message.includes('duplicate key value violates unique constraint')) {
       if (err.message.includes('username')) {
         res.status(400).json({ error: 'El nombre de usuario ya existe' });
       } else if (err.message.includes('email')) {
@@ -193,6 +193,7 @@ app.post('/api/register', async (req, res) => {
         res.status(400).json({ error: 'Usuario o email ya existe' });
       }
     } else {
+      console.error('❌ Error registrando usuario:', err);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
@@ -244,23 +245,23 @@ app.get('/api/test-db', async (req, res) => {
     console.log('🧪 Probando conexión a la base de datos...');
     
     // Verificar que la base de datos esté disponible
-    const testResult = await db.get('SELECT 1 as test');
-    console.log('✅ Conexión a BD exitosa:', testResult);
+    const testResult = await query('SELECT 1 as test');
+    console.log('✅ Conexión a BD exitosa:', testResult.rows[0]);
     
-    // Verificar estructura de la tabla photos
-    const tableInfo = await db.all("PRAGMA table_info(photos)");
-    console.log('📋 Estructura de tabla photos:', tableInfo);
+    // Verificar estructura de la tabla photos (PostgreSQL)
+    const tableInfo = await query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'photos'");
+    console.log('📋 Estructura de tabla photos:', tableInfo.rows);
     
     // Verificar secciones disponibles
-    const sections = await db.all('SELECT * FROM sections LIMIT 5');
-    console.log('📁 Secciones disponibles:', sections);
+    const sectionsResult = await query('SELECT * FROM sections LIMIT 5');
+    console.log('📁 Secciones disponibles:', sectionsResult.rows);
     
     res.json({ 
       ok: true, 
       message: 'Base de datos funcionando correctamente',
-      dbTest: testResult,
-      tableStructure: tableInfo,
-      sectionsCount: sections.length
+      dbTest: testResult.rows[0],
+      tableStructure: tableInfo.rows,
+      sectionsCount: sectionsResult.rows.length
     });
   } catch (err) {
     console.error('❌ Error probando BD:', err);
@@ -387,39 +388,51 @@ app.get('/api/user/stats', auth, async (req, res) => {
 
 // Votar por una foto
 app.post('/api/photos/:id/vote', auth, async (req, res) => {
-  const photoId = req.params.id;
   try {
-    await db.run('INSERT INTO votes (user_id, photo_id) VALUES (?, ?)', [req.user.id, photoId]);
+    const photoId = req.params.id;
+    await query('INSERT INTO votes (user_id, photo_id) VALUES ($1, $2)', [req.user.id, photoId]);
     res.json({ ok: true });
-  } catch {
-    res.status(400).json({ error: 'Ya votaste por esta foto' });
+  } catch (err) {
+    if (err.message.includes('duplicate key value violates unique constraint')) {
+      res.status(400).json({ error: 'Ya votaste por esta foto' });
+    } else {
+      console.error('❌ Error votando por foto:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
 });
 
 // Agregar comentario
 app.post('/api/photos/:id/comment', auth, async (req, res) => {
-  const { comment } = req.body;
-  const photoId = req.params.id;
-  if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comentario requerido' });
   try {
-    await db.run('INSERT INTO comments (user_id, photo_id, comment) VALUES (?, ?, ?)', [req.user.id, photoId, comment.trim()]);
+    const { comment } = req.body;
+    const photoId = req.params.id;
+    if (!comment || comment.trim() === '') return res.status(400).json({ error: 'Comentario requerido' });
+    
+    await query('INSERT INTO comments (user_id, photo_id, comment) VALUES ($1, $2, $3)', [req.user.id, photoId, comment.trim()]);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: 'Error al agregar comentario' });
+    console.error('❌ Error agregando comentario:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Obtener comentarios de una foto
 app.get('/api/photos/:id/comments', async (req, res) => {
-  const photoId = req.params.id;
-  const comments = await db.all(`
-    SELECT comments.*, users.username 
-    FROM comments 
-    JOIN users ON users.id = comments.user_id 
-    WHERE photo_id = ? 
-    ORDER BY created_at ASC
-  `, [photoId]);
-  res.json(comments);
+  try {
+    const photoId = req.params.id;
+    const commentsResult = await query(`
+      SELECT comments.*, users.username 
+      FROM comments 
+      JOIN users ON users.id = comments.user_id 
+      WHERE photo_id = $1 
+      ORDER BY created_at ASC
+    `, [photoId]);
+    res.json(commentsResult.rows);
+  } catch (err) {
+    console.error('❌ Error obteniendo comentarios:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // Eliminar foto (solo el propietario puede eliminar)
@@ -428,36 +441,37 @@ app.delete('/api/photos/:id', auth, async (req, res) => {
   console.log('📋 Parámetros:', req.params);
   console.log('🔑 Usuario autenticado:', req.user);
   
-  const photoId = req.params.id;
-  const userId = req.user.id;
-  
   try {
+    const photoId = req.params.id;
+    const userId = req.user.id;
+    
     console.log('🔍 Verificando si la foto existe...');
     // Verificar que la foto existe y pertenece al usuario
-    const photo = await db.get('SELECT * FROM photos WHERE id = ? AND user_id = ?', [photoId, userId]);
+    const photoResult = await query('SELECT * FROM photos WHERE id = $1 AND user_id = $2', [photoId, userId]);
     
-    if (!photo) {
+    if (photoResult.rows.length === 0) {
       console.log('❌ Foto no encontrada o no tienes permisos');
       return res.status(404).json({ error: 'Foto no encontrada o no tienes permisos para eliminarla' });
     }
     
+    const photo = photoResult.rows[0];
     console.log('✅ Foto encontrada:', photo);
     
     console.log('🗑️ Eliminando votos asociados...');
     // Eliminar votos asociados a la foto
-    await db.run('DELETE FROM votes WHERE photo_id = ?', [photoId]);
+    await query('DELETE FROM votes WHERE photo_id = $1', [photoId]);
     
     console.log('🗑️ Eliminando comentarios asociados...');
     // Eliminar comentarios asociados a la foto
-    await db.run('DELETE FROM comments WHERE photo_id = ?', [photoId]);
+    await query('DELETE FROM comments WHERE photo_id = $1', [photoId]);
     
     console.log('🗑️ Eliminando tags asociados...');
     // Eliminar tags asociados a la foto
-    await db.run('DELETE FROM photo_tags WHERE photo_id = ?', [photoId]);
+    await query('DELETE FROM photo_tags WHERE photo_id = $1', [photoId]);
     
     console.log('🗑️ Eliminando la foto...');
     // Eliminar la foto
-    await db.run('DELETE FROM photos WHERE id = ?', [photoId]);
+    await query('DELETE FROM photos WHERE id = $1', [photoId]);
     
     console.log('🗑️ Eliminando archivo físico...');
     // Eliminar el archivo físico si existe
@@ -481,7 +495,7 @@ app.delete('/api/photos/:id', auth, async (req, res) => {
 app.get('/api/photos/top', async (req, res) => {
   try {
     // Consulta simplificada para evitar problemas de tipos
-    const top = await db.all(`
+    const topResult = await query(`
       SELECT 
         p.id,
         p.filename,
@@ -507,47 +521,54 @@ app.get('/api/photos/top', async (req, res) => {
       ORDER BY COALESCE(v.vote_count, 0) DESC, p.created_at DESC 
       LIMIT 10
     `);
-    res.json(top);
+    res.json(topResult.rows);
   } catch (err) {
-    console.error('Error obteniendo fotos top:', err);
-    res.status(500).json({ error: 'Error al obtener fotos top' });
+    console.error('❌ Error obteniendo fotos top:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Marcar/desmarcar foto como "apareces en esta foto"
 app.post('/api/photos/:id/tag', auth, async (req, res) => {
-  const photoId = req.params.id;
   try {
-    // Verificar si ya está marcada
-    const existing = await db.get('SELECT * FROM photo_tags WHERE user_id = ? AND photo_id = ?', [req.user.id, photoId]);
+    const photoId = req.params.id;
     
-    if (existing) {
+    // Verificar si ya está marcada
+    const existingResult = await query('SELECT * FROM photo_tags WHERE user_id = $1 AND photo_id = $2', [req.user.id, photoId]);
+    
+    if (existingResult.rows.length > 0) {
       // Si ya está marcada, la desmarcamos
-      await db.run('DELETE FROM photo_tags WHERE user_id = ? AND photo_id = ?', [req.user.id, photoId]);
+      await query('DELETE FROM photo_tags WHERE user_id = $1 AND photo_id = $2', [req.user.id, photoId]);
       res.json({ tagged: false });
     } else {
       // Si no está marcada, la marcamos
-      await db.run('INSERT INTO photo_tags (user_id, photo_id) VALUES (?, ?)', [req.user.id, photoId]);
+      await query('INSERT INTO photo_tags (user_id, photo_id) VALUES ($1, $2)', [req.user.id, photoId]);
       res.json({ tagged: true });
     }
   } catch (err) {
-    res.status(500).json({ error: 'Error al marcar/desmarcar foto' });
+    console.error('❌ Error marcando/desmarcando foto:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Obtener fotos donde aparece el usuario
 app.get('/api/user/tagged-photos', auth, async (req, res) => {
-  const photos = await db.all(`
-    SELECT photos.*, users.username, 
-           (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
-           (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
-    FROM photos 
-    JOIN users ON users.id = photos.user_id 
-    JOIN photo_tags ON photo_tags.photo_id = photos.id 
-    WHERE photo_tags.user_id = ? 
-    ORDER BY photo_tags.created_at DESC
-  `, [req.user.id]);
-  res.json(photos);
+  try {
+    const photosResult = await query(`
+      SELECT photos.*, users.username, 
+             (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
+             (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
+      FROM photos 
+      JOIN users ON users.id = photos.user_id 
+      JOIN photo_tags ON photo_tags.photo_id = photos.id 
+      WHERE photo_tags.user_id = $1 
+      ORDER BY photo_tags.created_at DESC
+    `, [req.user.id]);
+    res.json(photosResult.rows);
+  } catch (err) {
+    console.error('❌ Error obteniendo fotos marcadas:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // Verificar si una foto está marcada por el usuario
@@ -565,7 +586,7 @@ app.get('/api/photos/:id/tagged', auth, async (req, res) => {
 // Obtener todos los usuarios (para búsqueda de perfiles)
 app.get('/api/users', auth, async (req, res) => {
   try {
-    const users = await db.all(`
+    const usersResult = await query(`
       SELECT 
         id, 
         username, 
@@ -575,19 +596,19 @@ app.get('/api/users', auth, async (req, res) => {
       FROM users 
       ORDER BY username ASC
     `);
-    res.json(users);
+    res.json(usersResult.rows);
   } catch (err) {
-    console.error('Error obteniendo usuarios:', err);
-    res.status(500).json({ error: 'Error al obtener usuarios' });
+    console.error('❌ Error obteniendo usuarios:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Obtener perfil de un usuario específico
 app.get('/api/users/:id', auth, async (req, res) => {
-  const userId = req.params.id;
-  
   try {
-    const user = await db.get(`
+    const userId = req.params.id;
+    
+    const userResult = await query(`
       SELECT 
         id, 
         username, 
@@ -595,32 +616,34 @@ app.get('/api/users/:id', auth, async (req, res) => {
         (SELECT COUNT(*) FROM photos WHERE user_id = users.id) as total_photos,
         (SELECT COUNT(*) FROM votes WHERE photo_id IN (SELECT id FROM photos WHERE user_id = users.id)) as total_likes
       FROM users 
-      WHERE id = ?
+      WHERE id = $1
     `, [userId]);
     
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
+    const user = userResult.rows[0];
+    
     // Obtener fotos del usuario
-    const photos = await db.all(`
+    const photosResult = await query(`
       SELECT photos.*, 
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
              sections.name as section_name
       FROM photos 
       JOIN sections ON sections.id = photos.section_id
-      WHERE user_id = ? 
+      WHERE user_id = $1 
       ORDER BY created_at DESC
     `, [userId]);
     
     res.json({
       user,
-      photos
+      photos: photosResult.rows
     });
   } catch (err) {
-    console.error('Error obteniendo perfil de usuario:', err);
-    res.status(500).json({ error: 'Error al obtener perfil' });
+    console.error('❌ Error obteniendo perfil de usuario:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -634,7 +657,7 @@ app.post('/api/user/profile-picture', auth, upload.single('profile_picture'), as
     const filename = req.file.filename;
     
     // Actualizar la base de datos con el nombre del archivo
-    await db.run('UPDATE users SET profile_picture = ? WHERE id = ?', [filename, req.user.id]);
+    await query('UPDATE users SET profile_picture = $1 WHERE id = $2', [filename, req.user.id]);
     
     res.json({ 
       message: 'Foto de perfil actualizada exitosamente',
@@ -642,37 +665,38 @@ app.post('/api/user/profile-picture', auth, upload.single('profile_picture'), as
       url: `/uploads/${filename}`
     });
   } catch (err) {
-    console.error('Error subiendo foto de perfil:', err);
-    res.status(500).json({ error: 'Error al subir foto de perfil' });
+    console.error('❌ Error subiendo foto de perfil:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Obtener foto de perfil del usuario
 app.get('/api/user/profile-picture', auth, async (req, res) => {
   try {
-    const user = await db.get('SELECT profile_picture FROM users WHERE id = ?', [req.user.id]);
+    const userResult = await query('SELECT profile_picture FROM users WHERE id = $1', [req.user.id]);
     
-    if (user && user.profile_picture) {
+    if (userResult.rows.length > 0 && userResult.rows[0].profile_picture) {
       res.json({ 
-        profile_picture: user.profile_picture,
-        url: `/uploads/${user.profile_picture}`
+        profile_picture: userResult.rows[0].profile_picture,
+        url: `/uploads/${userResult.rows[0].profile_picture}`
       });
     } else {
       res.json({ profile_picture: null, url: null });
     }
   } catch (err) {
-    console.error('Error obteniendo foto de perfil:', err);
-    res.status(500).json({ error: 'Error al obtener foto de perfil' });
+    console.error('❌ Error obteniendo foto de perfil:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Obtener todas las secciones
 app.get('/api/sections', async (req, res) => {
   try {
-    const sections = await db.all('SELECT * FROM sections ORDER BY name ASC');
-    res.json(sections);
+    const sectionsResult = await query('SELECT * FROM sections ORDER BY name ASC');
+    res.json(sectionsResult.rows);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener secciones' });
+    console.error('❌ Error obteniendo secciones:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -797,7 +821,7 @@ app.listen(PORT, () => {
 // Dashboard de administración
 app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
   try {
-    const stats = await db.get(`
+    const statsResult = await query(`
       SELECT 
         (SELECT COUNT(*) FROM users WHERE role != 'admin') as total_users,
         (SELECT COUNT(*) FROM photos) as total_photos,
@@ -805,9 +829,9 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
         (SELECT COUNT(*) FROM users WHERE is_banned = 1) as banned_users
     `);
     
-    res.json({ stats });
+    res.json({ stats: statsResult.rows[0] });
   } catch (err) {
-    console.error('Error obteniendo dashboard:', err);
+    console.error('❌ Error obteniendo dashboard:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -815,7 +839,7 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
 // Obtener todos los usuarios (admin)
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
-    const users = await db.all(`
+    const usersResult = await query(`
       SELECT 
         id, username, email, role, is_banned, created_at,
         (SELECT COUNT(*) FROM photos WHERE user_id = users.id) as total_photos,
@@ -824,62 +848,65 @@ app.get('/api/admin/users', adminAuth, async (req, res) => {
       WHERE role != 'admin'
       ORDER BY created_at DESC
     `);
-    res.json(users);
+    res.json(usersResult.rows);
   } catch (err) {
-    console.error('Error obteniendo usuarios:', err);
+    console.error('❌ Error obteniendo usuarios:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Obtener perfil de cualquier usuario (admin)
 app.get('/api/admin/users/:id', adminAuth, async (req, res) => {
-  const userId = req.params.id;
-  
   try {
-    const user = await db.get(`
+    const userId = req.params.id;
+    
+    const userResult = await query(`
       SELECT 
         id, username, email, role, is_banned, created_at,
         (SELECT COUNT(*) FROM photos WHERE user_id = users.id) as total_photos,
         (SELECT COUNT(*) FROM votes WHERE photo_id IN (SELECT id FROM photos WHERE user_id = users.id)) as total_likes
       FROM users 
-      WHERE id = ? AND role != 'admin'
+      WHERE id = $1 AND role != 'admin'
     `, [userId]);
     
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
+    const user = userResult.rows[0];
+    
     // Obtener fotos del usuario
-    const photos = await db.all(`
+    const photosResult = await query(`
       SELECT photos.*, 
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
              sections.name as section_name
       FROM photos 
       JOIN sections ON sections.id = photos.section_id
-      WHERE user_id = ? 
+      WHERE user_id = $1 
       ORDER BY created_at DESC
     `, [userId]);
     
-    res.json({ user, photos });
+    res.json({ user, photos: photosResult.rows });
   } catch (err) {
-    console.error('Error obteniendo perfil de usuario:', err);
+    console.error('❌ Error obteniendo perfil de usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Banear/desbanear usuario (admin)
 app.post('/api/admin/users/:id/ban', adminAuth, async (req, res) => {
-  const userId = req.params.id;
-  const { is_banned } = req.body;
-  
   try {
-    const user = await db.get('SELECT * FROM users WHERE id = ? AND role != "admin"', [userId]);
-    if (!user) {
+    const userId = req.params.id;
+    const { is_banned } = req.body;
+    
+    const userResult = await query('SELECT * FROM users WHERE id = $1 AND role != \'admin\'', [userId]);
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
-    await db.run('UPDATE users SET is_banned = ? WHERE id = ?', [is_banned ? 1 : 0, userId]);
+    const user = userResult.rows[0];
+    await query('UPDATE users SET is_banned = $1 WHERE id = $2', [is_banned ? 1 : 0, userId]);
     
     // Registrar acción en logs
     await logAdminAction(req.user.id, is_banned ? 'ban_user' : 'unban_user', 'user', userId, 
@@ -887,28 +914,30 @@ app.post('/api/admin/users/:id/ban', adminAuth, async (req, res) => {
     
     res.json({ ok: true, message: `Usuario ${is_banned ? 'baneado' : 'desbaneado'} exitosamente` });
   } catch (err) {
-    console.error('Error banear/desbanear usuario:', err);
+    console.error('❌ Error banear/desbanear usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Eliminar usuario (admin)
 app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
-  const userId = req.params.id;
-  
   try {
-    const user = await db.get('SELECT * FROM users WHERE id = ? AND role != "admin"', [userId]);
-    if (!user) {
+    const userId = req.params.id;
+    
+    const userResult = await query('SELECT * FROM users WHERE id = $1 AND role != \'admin\'', [userId]);
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
+    const user = userResult.rows[0];
+    
     // Eliminar fotos del usuario
-    const photos = await db.all('SELECT * FROM photos WHERE user_id = ?', [userId]);
-    for (const photo of photos) {
+    const photosResult = await query('SELECT * FROM photos WHERE user_id = $1', [userId]);
+    for (const photo of photosResult.rows) {
       // Eliminar votos, comentarios y tags
-      await db.run('DELETE FROM votes WHERE photo_id = ?', [photo.id]);
-      await db.run('DELETE FROM comments WHERE photo_id = ?', [photo.id]);
-      await db.run('DELETE FROM photo_tags WHERE photo_id = ?', [photo.id]);
+      await query('DELETE FROM votes WHERE photo_id = $1', [photo.id]);
+      await query('DELETE FROM comments WHERE photo_id = $1', [photo.id]);
+      await query('DELETE FROM photo_tags WHERE photo_id = $1', [photo.id]);
       
       // Eliminar archivo físico
       const filePath = path.join(process.cwd(), 'uploads', photo.filename);
@@ -918,17 +947,17 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
     }
     
     // Eliminar fotos del usuario
-    await db.run('DELETE FROM photos WHERE user_id = ?', [userId]);
+    await query('DELETE FROM photos WHERE user_id = $1', [userId]);
     
     // Eliminar usuario
-    await db.run('DELETE FROM users WHERE id = ?', [userId]);
+    await query('DELETE FROM users WHERE id = $1', [userId]);
     
     // Registrar acción en logs
     await logAdminAction(req.user.id, 'delete_user', 'user', userId, `Eliminó al usuario ${user.username}`);
     
     res.json({ ok: true, message: 'Usuario eliminado exitosamente' });
   } catch (err) {
-    console.error('Error eliminando usuario:', err);
+    console.error('❌ Error eliminando usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -936,7 +965,7 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
 // Obtener todas las fotos del sistema (admin)
 app.get('/api/admin/photos', adminAuth, async (req, res) => {
   try {
-    const photos = await db.all(`
+    const photosResult = await query(`
       SELECT photos.*, users.username, sections.name as section_name,
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments
@@ -945,31 +974,33 @@ app.get('/api/admin/photos', adminAuth, async (req, res) => {
       JOIN sections ON sections.id = photos.section_id
       ORDER BY photos.created_at DESC
     `);
-    res.json(photos);
+    res.json(photosResult.rows);
   } catch (err) {
-    console.error('Error obteniendo fotos:', err);
+    console.error('❌ Error obteniendo fotos:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Eliminar cualquier foto (admin)
 app.delete('/api/admin/photos/:id', adminAuth, async (req, res) => {
-  const photoId = req.params.id;
-  
   try {
-    const photo = await db.get('SELECT photos.*, users.username FROM photos JOIN users ON users.id = photos.user_id WHERE photos.id = ?', [photoId]);
+    const photoId = req.params.id;
     
-    if (!photo) {
+    const photoResult = await query('SELECT photos.*, users.username FROM photos JOIN users ON users.id = photos.user_id WHERE photos.id = $1', [photoId]);
+    
+    if (photoResult.rows.length === 0) {
       return res.status(404).json({ error: 'Foto no encontrada' });
     }
     
+    const photo = photoResult.rows[0];
+    
     // Eliminar votos, comentarios y tags
-    await db.run('DELETE FROM votes WHERE photo_id = ?', [photoId]);
-    await db.run('DELETE FROM comments WHERE photo_id = ?', [photoId]);
-    await db.run('DELETE FROM photo_tags WHERE photo_id = ?', [photoId]);
+    await query('DELETE FROM votes WHERE photo_id = $1', [photoId]);
+    await query('DELETE FROM comments WHERE photo_id = $1', [photoId]);
+    await query('DELETE FROM photo_tags WHERE photo_id = $1', [photoId]);
     
     // Eliminar la foto
-    await db.run('DELETE FROM photos WHERE id = ?', [photoId]);
+    await query('DELETE FROM photos WHERE id = $1', [photoId]);
     
     // Eliminar archivo físico
     const filePath = path.join(process.cwd(), 'uploads', photo.filename);
@@ -982,7 +1013,7 @@ app.delete('/api/admin/photos/:id', adminAuth, async (req, res) => {
     
     res.json({ ok: true, message: 'Foto eliminada exitosamente' });
   } catch (err) {
-    console.error('Error eliminando foto:', err);
+    console.error('❌ Error eliminando foto:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -990,16 +1021,16 @@ app.delete('/api/admin/photos/:id', adminAuth, async (req, res) => {
 // Obtener logs de administración
 app.get('/api/admin/logs', adminAuth, async (req, res) => {
   try {
-    const logs = await db.all(`
+    const logsResult = await query(`
       SELECT admin_logs.*, users.username as admin_username
       FROM admin_logs 
       JOIN users ON users.id = admin_logs.admin_id
       ORDER BY created_at DESC 
       LIMIT 100
     `);
-    res.json(logs);
+    res.json(logsResult.rows);
   } catch (err) {
-    console.error('Error obteniendo logs:', err);
+    console.error('❌ Error obteniendo logs:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -1008,14 +1039,14 @@ app.get('/api/admin/logs', adminAuth, async (req, res) => {
 app.delete('/api/admin/logs/clear', adminAuth, async (req, res) => {
   try {
     // Borrar todos los logs
-    await db.run('DELETE FROM admin_logs');
+    await query('DELETE FROM admin_logs');
     
     // Registrar la acción de limpieza
     await logAdminAction(req.user.id, 'clear_logs', 'system', null, 'Limpió todos los logs de administración');
     
     res.json({ ok: true, message: 'Todos los logs han sido borrados exitosamente' });
   } catch (err) {
-    console.error('Error borrando logs:', err);
+    console.error('❌ Error borrando logs:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
