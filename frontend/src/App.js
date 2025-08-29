@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+    import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 import { FaCamera } from 'react-icons/fa';
@@ -954,26 +954,20 @@ const Perfil = React.memo(({ token, setVista }) => {
     setFotosSeleccionadas(new Set());
   }, []);
 
-  // Función para descargar imágenes seleccionadas
+  // Función para descargar imágenes seleccionadas individualmente
   const descargarSeleccionadas = useCallback(async () => {
     if (fotosSeleccionadas.size === 0) {
       alert('Selecciona al menos una foto para descargar');
       return;
     }
 
-
-
     try {
-      // Crear un ZIP usando JSZip
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-      
       const fotosActuales = vistaPerfil === 'mis-fotos' ? fotos : fotosMarcadas;
       const fotosParaDescargar = fotosActuales.filter(f => fotosSeleccionadas.has(f.id));
       
-      console.log('📸 Iniciando descarga de', fotosParaDescargar.length, 'fotos...');
+      console.log('📸 Iniciando descarga de', fotosParaDescargar.length, 'fotos individuales...');
       
-      // Descargar cada imagen y agregarla al ZIP
+      // Descargar cada imagen individualmente
       for (const foto of fotosParaDescargar) {
         try {
           console.log('📥 Descargando foto:', foto.filename);
@@ -999,8 +993,23 @@ const Perfil = React.memo(({ token, setVista }) => {
             ? `${foto.title}.${extension}`
             : `foto_${foto.id}.${extension}`;
           
-          console.log('💾 Agregando al ZIP:', nombreArchivo);
-          zip.file(nombreArchivo, blob);
+          console.log('💾 Descargando imagen individual:', nombreArchivo);
+          
+          // Crear y descargar la imagen individual
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = nombreArchivo;
+          a.style.display = 'none';
+          
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
+          // Limpiar el URL después de un breve delay
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+          }, 100);
           
         } catch (err) {
           console.error(`❌ Error descargando ${foto.filename}:`, err);
@@ -1008,78 +1017,16 @@ const Perfil = React.memo(({ token, setVista }) => {
         }
       }
 
-      console.log('🗜️ Generando archivo ZIP...');
-      // Generar y descargar el ZIP
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      console.log('📦 ZIP generado, tamaño:', zipBlob.size, 'bytes');
+      console.log('✅ Descarga de imágenes individuales completada exitosamente');
       
-      // Crear y descargar el archivo
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `fotos_${usuario.username}_${vistaPerfil}_${new Date().toISOString().split('T')[0]}.zip`;
-      a.style.display = 'none';
-      
-      console.log('🔗 Creando enlace de descarga...');
-      document.body.appendChild(a);
-      
-      // Forzar la descarga
-      console.log('⬇️ Iniciando descarga...');
-      a.click();
-      
-      // Limpiar después de un breve delay
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        console.log('🧹 Enlace de descarga limpiado');
-      }, 1000);
-
-      // Fallback: mostrar enlace manual inmediatamente
-      console.log('🔗 Mostrando enlace manual para descarga...');
-      const fallbackUrl = URL.createObjectURL(zipBlob);
-      const fallbackLink = document.createElement('a');
-      fallbackLink.href = fallbackUrl;
-      fallbackLink.download = `fotos_${usuario.username}_${vistaPerfil}_${new Date().toISOString().split('T')[0]}.zip`;
-      fallbackLink.textContent = `📥 DESCARGAR ZIP (${fotosParaDescargar.length} fotos) - Haz clic aquí`;
-      fallbackLink.style.cssText = 'display: block; padding: 15px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; margin: 15px 0; text-align: center; font-weight: bold; font-size: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);';
-      
-      // Insertar el enlace en la página de manera más visible
-      const container = document.querySelector('.perfil-ig-seleccion-controls');
-      if (container) {
-        // Crear un contenedor destacado para el enlace
-        const downloadContainer = document.createElement('div');
-        downloadContainer.style.cssText = 'background: #f8f9fa; border: 2px solid #28a745; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;';
-        
-        const downloadTitle = document.createElement('h4');
-        downloadTitle.textContent = '📦 Archivo ZIP listo para descargar';
-        downloadTitle.style.cssText = 'margin: 0 0 15px 0; color: #28a745; font-size: 18px;';
-        
-        const downloadInfo = document.createElement('p');
-        downloadInfo.textContent = `Se generó un archivo ZIP con ${fotosParaDescargar.length} foto(s). Haz clic en el botón de abajo para descargarlo.`;
-        downloadInfo.style.cssText = 'margin: 0 0 15px 0; color: #666;';
-        
-        downloadContainer.appendChild(downloadTitle);
-        downloadContainer.appendChild(downloadInfo);
-        downloadContainer.appendChild(fallbackLink);
-        container.appendChild(downloadContainer);
-        
-        // Limpiar después de 5 minutos
-        setTimeout(() => {
-          if (downloadContainer.parentNode) {
-            downloadContainer.parentNode.removeChild(downloadContainer);
-            URL.revokeObjectURL(fallbackUrl);
-            console.log('🧹 Enlace de descarga manual limpiado');
-          }
-        }, 300000);
-      }
-
-      console.log('✅ Descarga completada exitosamente');
+      // Mostrar mensaje de éxito
+      alert(`Se descargaron ${fotosParaDescargar.length} imagen(es) individualmente. Revisa tu carpeta de descargas.`);
 
       // Salir del modo selección
       salirModoSeleccion();
     } catch (err) {
-      console.error('❌ Error creando ZIP:', err);
-      alert('Error al crear el archivo ZIP. Intenta de nuevo.');
+      console.error('❌ Error en la descarga:', err);
+      alert('Error al descargar las imágenes. Intenta de nuevo.');
     }
   }, [fotosSeleccionadas, fotos, fotosMarcadas, usuario.username, vistaPerfil, salirModoSeleccion]);
 
