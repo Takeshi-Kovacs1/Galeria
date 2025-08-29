@@ -949,9 +949,8 @@ h1 {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: 8px;
   display: block;
-  background: #f0f0f0;
 }
 .perfil-ig-foto-cam {
   position: absolute;
@@ -3317,7 +3316,7 @@ img {
   .perfil-ig-foto-gal img {
     height: 120px;
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 8px;
   }
   
   .perfil-ig-seleccion-controls {
@@ -3433,5 +3432,6 @@ img {
   
   .perfil-ig-foto-gal img {
     height: 120px;
+    border-radius: 8px;
   }
 }

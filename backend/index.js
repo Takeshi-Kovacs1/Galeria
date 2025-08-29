@@ -407,19 +407,27 @@ app.get('/api/user/stats', auth, async (req, res) => {
   }
 });
 
-// Votar por una foto
+// Votar por una foto (toggle)
 app.post('/api/photos/:id/vote', auth, async (req, res) => {
   try {
     const photoId = req.params.id;
-    await query('INSERT INTO votes (user_id, photo_id) VALUES ($1, $2)', [req.user.id, photoId]);
-    res.json({ ok: true });
-  } catch (err) {
-    if (err.message.includes('duplicate key value violates unique constraint')) {
-      res.status(400).json({ error: 'Ya votaste por esta foto' });
+    const userId = req.user.id;
+    
+    // Verificar si ya votó por esta foto
+    const existingVote = await query('SELECT * FROM votes WHERE user_id = $1 AND photo_id = $2', [userId, photoId]);
+    
+    if (existingVote.rows.length > 0) {
+      // Si ya votó, quitar el voto
+      await query('DELETE FROM votes WHERE user_id = $1 AND photo_id = $2', [userId, photoId]);
+      res.json({ ok: true, action: 'unvoted' });
     } else {
-      console.error('❌ Error votando por foto:', err);
-      res.status(500).json({ error: 'Error interno del servidor' });
+      // Si no ha votado, agregar el voto
+      await query('INSERT INTO votes (user_id, photo_id) VALUES ($1, $2)', [userId, photoId]);
+      res.json({ ok: true, action: 'voted' });
     }
+  } catch (err) {
+    console.error('❌ Error votando por foto:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
