@@ -261,7 +261,7 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
       setFotos(prevFotos => 
         prevFotos.map(foto => 
           foto.id === fotoId 
-            ? { ...foto, votes: fotosVotadas.has(fotoId) ? (foto.votes || 0) - 1 : (foto.votes || 0) + 1 }
+            ? { ...foto, votes: fotosVotadas.has(fotoId) ? Math.max(0, (foto.votes || 0) - 1) : (foto.votes || 0) + 1 }
             : foto
         )
       );
@@ -1209,9 +1209,18 @@ const Perfil = React.memo(({ token, setVista }) => {
           <div className="perfil-ig-info">
             <h2>@{usuario.username}</h2>
             <div className="perfil-ig-stats">
-              <span><strong>{stats.total_photos}</strong><br/>publicaciones</span>
-              <span><strong>{stats.total_likes}</strong><br/>likes totales</span>
-              <span><strong>{fotosMarcadas.length}</strong><br/>fotos donde aparezco</span>
+              <div className="stat-item">
+                <strong>{stats.total_photos}</strong>
+                <span>publicaciones</span>
+              </div>
+              <div className="stat-item">
+                <strong>{stats.total_likes}</strong>
+                <span>likes totales</span>
+              </div>
+              <div className="stat-item">
+                <strong>{fotosMarcadas.length}</strong>
+                <span>fotos donde aparezco</span>
+              </div>
             </div>
           </div>
         </div>
