@@ -1,5 +1,4 @@
-
-    import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 import { FaCamera } from 'react-icons/fa';

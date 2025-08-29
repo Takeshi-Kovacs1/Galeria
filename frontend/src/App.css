@@ -110,15 +110,7 @@ h1 {
   position: relative;
 }
 
-.top-fotos-section h2::after {
-  content: '🏆';
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.8em;
-  opacity: 0.8;
-}
+/* Trofeo difuminado eliminado */
 
 .top-fotos-grid {
   display: grid;
