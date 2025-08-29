@@ -905,8 +905,7 @@ h1 {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  display: block;
   position: relative;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
@@ -950,8 +949,9 @@ h1 {
   height: auto;
   max-height: 300px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 12px;
   display: block;
+  margin: 0;
 }
 .perfil-ig-foto-cam {
   position: absolute;
@@ -3291,12 +3291,12 @@ img {
   .perfil-ig-info {
     flex: 1;
     margin-left: 0;
-    padding-top: 0;
+    padding-top: 0.2rem;
   }
   
   .perfil-ig-info h2 {
     font-size: 1.2rem;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
     text-align: left;
     margin-top: 0;
   }
@@ -3307,7 +3307,7 @@ img {
     gap: 0.5rem;
     font-size: 0.9rem;
     text-align: center;
-    margin-top: 0.2rem;
+    margin-top: 0;
     margin-bottom: 0.3rem;
     width: 100%;
   }
