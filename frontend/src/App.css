@@ -905,6 +905,48 @@ h1 {
   .perfil-ig-galeria-grande {
     grid-template-columns: repeat(3, 1fr) !important;
   }
+  
+  /* Mejorar estética del header en escritorio */
+  .perfil-ig-header-row {
+    gap: 2.5rem;
+    align-items: center;
+  }
+  
+  .perfil-ig-foto {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+  }
+  
+  .perfil-ig-info {
+    margin-left: 0;
+    gap: 1.5rem;
+  }
+  
+  .perfil-ig-info h2 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .perfil-ig-stats {
+    gap: 3rem;
+    margin-bottom: 0;
+    justify-content: flex-start;
+  }
+  
+  .stat-item {
+    min-width: 80px;
+  }
+  
+  .stat-item strong {
+    font-size: 1.4rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .stat-item span {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
 }
 .perfil-ig-foto-gal {
   width: 100%;
