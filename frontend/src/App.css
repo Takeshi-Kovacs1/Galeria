@@ -906,46 +906,66 @@ h1 {
     grid-template-columns: repeat(3, 1fr) !important;
   }
   
-  /* Mejorar estética del header en escritorio */
+  /* Layout de Instagram para escritorio */
   .perfil-ig-header-row {
-    gap: 2.5rem;
-    align-items: center;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 5rem;
+    padding: 2rem 0;
   }
   
   .perfil-ig-foto {
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
     flex-shrink: 0;
+    margin: 0;
   }
   
   .perfil-ig-info {
+    flex: 1;
     margin-left: 0;
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
+    padding-top: 0.5rem;
   }
   
   .perfil-ig-info h2 {
-    font-size: 2.2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+    color: #262626;
   }
   
   .perfil-ig-stats {
+    display: flex;
     gap: 3rem;
-    margin-bottom: 0;
+    margin: 0;
     justify-content: flex-start;
+    align-items: center;
   }
   
   .stat-item {
-    min-width: 80px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: auto;
   }
   
   .stat-item strong {
-    font-size: 1.4rem;
-    margin-bottom: 0.3rem;
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 600;
+    color: #262626;
   }
   
   .stat-item span {
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight: 400;
+    color: #262626;
+    text-transform: none;
   }
 }
 .perfil-ig-foto-gal {
