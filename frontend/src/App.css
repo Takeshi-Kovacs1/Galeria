@@ -879,14 +879,14 @@ h1 {
 }
 .perfil-ig-galeria {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-top: 1.5rem;
   width: 100%;
 }
 
 .perfil-ig-galeria-grande {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 1rem;
   max-width: 100%;
 }
@@ -899,11 +899,11 @@ h1 {
 /* Solo para escritorio - 3 columnas */
 @media (min-width: 769px) {
   .perfil-ig-galeria {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr) !important;
   }
   
   .perfil-ig-galeria-grande {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr) !important;
   }
 }
 .perfil-ig-foto-gal {
