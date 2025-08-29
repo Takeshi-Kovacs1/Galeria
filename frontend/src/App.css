@@ -268,7 +268,7 @@ h1 {
 }
 
 .seccion-icon {
-  font-size: 1.2em;
+  font-size: 1em;
   color: #007bff;
 }
 
@@ -791,8 +791,8 @@ h1 {
   padding-left: 4rem;
 }
 .perfil-ig-foto {
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   overflow: hidden;
   border: 4px solid #ffb347;
@@ -899,7 +899,6 @@ h1 {
   width: 100%;
   height: auto;
   min-width: 300px;
-  min-height: 200px;
   max-width: 100%;
   background: #fff;
   border-radius: 12px;
@@ -3281,8 +3280,8 @@ img {
   }
   
   .perfil-ig-foto {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     margin: 0;
     flex-shrink: 0;
   }
@@ -3366,7 +3365,6 @@ img {
     width: 100%;
     height: auto;
     min-width: 250px;
-    min-height: 180px;
     max-width: 100%;
     background: #fff;
     border-radius: 8px;
