@@ -971,7 +971,12 @@ const Perfil = React.memo(({ token, setVista }) => {
       for (const foto of fotosParaDescargar) {
         try {
           console.log('📥 Descargando foto:', foto.filename);
-          const response = await fetch(UPLOADS_URL + '/' + foto.filename);
+          
+          // Usar Cloudinary URL si está disponible, sino fallback a UPLOADS_URL
+          const imageUrl = foto.image_url || `${UPLOADS_URL}/${foto.filename}`;
+          console.log('🔗 URL de descarga:', imageUrl);
+          
+          const response = await fetch(imageUrl);
           
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
