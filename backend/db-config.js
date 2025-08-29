@@ -119,7 +119,7 @@ export const initDatabase = async () => {
     await query(`
       CREATE TABLE IF NOT EXISTS admin_logs (
         id SERIAL PRIMARY KEY,
-        admin_username VARCHAR(255),
+        admin_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         action VARCHAR(100),
         target_type VARCHAR(50),
         target_id INTEGER,
