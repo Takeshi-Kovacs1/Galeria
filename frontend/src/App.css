@@ -3395,7 +3395,7 @@ img {
   /* Fotos individuales móviles - aprovechan todo el ancho */
   .perfil-ig-foto-gal {
     width: 100%;
-    height: auto;
+    height: 400px;
     min-width: 250px;
     max-width: 100%;
     background: #fff;
