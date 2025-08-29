@@ -35,7 +35,7 @@ const Carrusel = React.memo(({ fotos, visibleVista }) => {
       <div className="top-fotos-grid">
         {top3Fotos.map((foto, index) => {
           console.log('🖼️ Renderizando foto:', foto);
-          const imageUrl = `${UPLOADS_URL}/${foto.filename}`;
+          const imageUrl = foto.image_url || `${UPLOADS_URL}/${foto.filename}`;
           console.log('🖼️ URL de imagen:', imageUrl);
           
           return (
@@ -292,7 +292,7 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
         <div className="galeria-grid">
           {fotos.map(foto => (
             <div className="foto" key={foto.id}>
-              <img src={UPLOADS_URL + '/' + foto.filename} alt={foto.title} loading="lazy" />
+              <img src={foto.image_url || UPLOADS_URL + '/' + foto.filename} alt={foto.title} loading="lazy" />
               <div className="foto-info">
                 <b>{foto.title}</b>
                 <span>por {foto.username}</span>
@@ -1279,7 +1279,7 @@ const Perfil = React.memo(({ token, setVista }) => {
                   {fotosSeleccionadas.has(foto.id) ? <FaCheckSquare /> : <FaSquare />}
                 </div>
               )}
-              <img src={UPLOADS_URL + '/' + foto.filename} alt={foto.title} loading="lazy" />
+              <img src={foto.image_url || UPLOADS_URL + '/' + foto.filename} alt={foto.title} loading="lazy" />
               <div className="perfil-ig-foto-overlay">
                 <div className="perfil-ig-likes-overlay">
                   <FaHeart size={24} />

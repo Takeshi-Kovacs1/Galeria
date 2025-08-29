@@ -83,6 +83,7 @@ export const initDatabase = async () => {
         section_id INTEGER REFERENCES sections(id) ON DELETE CASCADE,
         filename VARCHAR(255),
         title VARCHAR(255),
+        cloudinary_url TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
