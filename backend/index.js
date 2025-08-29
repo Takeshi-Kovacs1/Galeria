@@ -552,9 +552,14 @@ app.get('/api/user/tagged-photos', auth, async (req, res) => {
 
 // Verificar si una foto está marcada por el usuario
 app.get('/api/photos/:id/tagged', auth, async (req, res) => {
-  const photoId = req.params.id;
-  const tagged = await db.get('SELECT * FROM photo_tags WHERE user_id = ? AND photo_id = ?', [req.user.id, photoId]);
-  res.json({ tagged: !!tagged });
+  try {
+    const photoId = req.params.id;
+    const taggedResult = await query('SELECT * FROM photo_tags WHERE user_id = $1 AND photo_id = $2', [req.user.id, photoId]);
+    res.json({ tagged: taggedResult.rows.length > 0 });
+  } catch (err) {
+    console.error('❌ Error verificando si foto está marcada:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // Obtener todos los usuarios (para búsqueda de perfiles)
