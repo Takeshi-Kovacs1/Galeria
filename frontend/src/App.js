@@ -1737,11 +1737,11 @@ export default function App() {
         counts['all'] = allPhotos.length;
         setSectionCounts(counts);
         
-        // Recargar fotos de la sección actual
+        // Recargar fotos de la sección actual manteniendo la página actual
         if (selectedSection === 'all') {
-          handleShowAllPhotos();
+          handleShowAllPhotos(currentPage);
         } else if (selectedSection) {
-          handleSectionClick(selectedSection);
+          handleSectionClick(selectedSection, currentPage);
         }
         
         // También recargar las fotos top
