@@ -1583,19 +1583,15 @@ export default function App() {
         }
         setSelectedSection('all'); // Marcar como "todas las fotos"
         
-        // Cargar el conteo de fotos por sección
-        console.log('📊 Obteniendo conteo de fotos por sección...');
-        const allPhotosResponse = await axios.get(API + '/photos?page=1&limit=1000'); // Obtener muchas fotos para el conteo
-        const allPhotos = allPhotosResponse.data.photos || allPhotosResponse.data;
-        
-        // Calcular conteo por sección
+        // Calcular conteo por sección usando los datos ya obtenidos
+        console.log('📊 Calculando conteo de fotos por sección...');
         const counts = {};
         response.data.forEach(section => {
-          counts[section.id] = allPhotos ? allPhotos.filter(photo => photo.section_id === section.id).length : 0;
+          counts[section.id] = 0; // Se actualizará cuando se cargue cada sección específica
         });
         
-        // Agregar conteo total
-        counts['all'] = allPhotos ? allPhotos.length : 0;
+        // Usar el total de fotos de la respuesta paginada
+        counts['all'] = fotosResponse.data.pagination ? fotosResponse.data.pagination.totalPhotos : 0;
         
         console.log('✅ Conteo por sección:', counts);
         setSectionCounts(counts);
@@ -1724,20 +1720,8 @@ export default function App() {
     try {
       const response = await axios.post(API + '/photos/' + id + '/vote', {}, { headers: { Authorization: 'Bearer ' + token } });
       
-      // Recargar fotos de la sección actual y actualizar conteos
+      // Recargar fotos de la sección actual manteniendo la página actual
       try {
-        const allPhotosResponse = await axios.get(API + '/photos');
-        const allPhotos = allPhotosResponse.data;
-        
-        // Actualizar conteo por sección
-        const counts = {};
-        sections.forEach(section => {
-          counts[section.id] = allPhotos.filter(photo => photo.section_id === section.id).length;
-        });
-        counts['all'] = allPhotos.length;
-        setSectionCounts(counts);
-        
-        // Recargar fotos de la sección actual manteniendo la página actual
         if (selectedSection === 'all') {
           handleShowAllPhotos(currentPage);
         } else if (selectedSection) {
@@ -1748,7 +1732,7 @@ export default function App() {
         const topResponse = await axios.get(API + '/photos/top');
         setTop(topResponse.data);
       } catch (err) {
-        console.error('Error actualizando conteos después de votar:', err);
+        console.error('Error actualizando datos después de votar:', err);
       }
       
       return response; // Devolver la respuesta para que handleVotar la use
