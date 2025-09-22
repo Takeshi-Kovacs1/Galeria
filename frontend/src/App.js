@@ -1644,6 +1644,9 @@ export default function App() {
       });
       counts['all'] = fotosRes.data.pagination.totalPhotos;
       setSectionCounts(counts);
+      
+      // Scroll hacia arriba para mostrar la primera foto de la nueva página
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error('❌ Error loading all photos:', err);
     } finally {
@@ -1685,6 +1688,9 @@ export default function App() {
       });
       counts['all'] = allPhotos ? allPhotos.length : 0;
       setSectionCounts(counts);
+      
+      // Scroll hacia arriba para mostrar la primera foto de la nueva sección
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error('❌ Error loading section photos:', err);
     } finally {
@@ -1701,6 +1707,8 @@ export default function App() {
       } else if (selectedSection) {
         handleSectionClick(selectedSection, nextPage);
       }
+      // Scroll hacia arriba para mostrar la primera foto de la nueva página
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [hasNextPage, loadingSection, currentPage, selectedSection, handleShowAllPhotos, handleSectionClick]);
 
@@ -1712,6 +1720,8 @@ export default function App() {
       } else if (selectedSection) {
         handleSectionClick(selectedSection, prevPage);
       }
+      // Scroll hacia arriba para mostrar la primera foto de la nueva página
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [hasPrevPage, loadingSection, currentPage, selectedSection, handleShowAllPhotos, handleSectionClick]);
 
