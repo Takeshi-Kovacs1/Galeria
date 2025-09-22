@@ -26,6 +26,8 @@ if (isEmailConfigured()) {
   } catch (err) {
     console.error('❌ Error configurando email:', err);
    
+  
+  
     transporter = null;
   }
 } else {
@@ -342,32 +344,72 @@ app.post('/api/photos', auth, upload.array('photos', 50), async (req, res) => {
   }
 });
 
-// Obtener todas las fotos con comentarios
+// Obtener todas las fotos con comentarios (con paginación)
 app.get('/api/photos', async (req, res) => {
-  const { section_id } = req.query;
+  const { section_id, page = 1, limit = 10 } = req.query;
+  
+  // Convertir a números enteros
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const offset = (pageNum - 1) * limitNum;
   
   let sqlQuery = `
     SELECT photos.*, users.username, sections.name as section_name,
            (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
            (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
-           COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
+           CASE 
+             WHEN photos.cloudinary_url IS NOT NULL AND photos.cloudinary_url != '' THEN photos.cloudinary_url
+             ELSE CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)
+           END as image_url
+    FROM photos 
+    JOIN users ON users.id = photos.user_id 
+    JOIN sections ON sections.id = photos.section_id
+  `;
+  
+  let countQuery = `
+    SELECT COUNT(*) as total
     FROM photos 
     JOIN users ON users.id = photos.user_id 
     JOIN sections ON sections.id = photos.section_id
   `;
   
   let params = [];
+  let countParams = [];
   
   if (section_id) {
     sqlQuery += ' WHERE photos.section_id = $1';
+    countQuery += ' WHERE photos.section_id = $1';
     params.push(section_id);
+    countParams.push(section_id);
   }
   
-  sqlQuery += ' ORDER BY photos.created_at DESC';
+  sqlQuery += ' ORDER BY photos.created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
+  params.push(limitNum, offset);
   
   try {
+    // Obtener el total de fotos
+    const countResult = await query(countQuery, countParams);
+    const totalPhotos = parseInt(countResult.rows[0].total);
+    
+    // Obtener las fotos paginadas
     const photosResult = await query(sqlQuery, params);
-    res.json(photosResult.rows);
+    
+    // Calcular información de paginación
+    const totalPages = Math.ceil(totalPhotos / limitNum);
+    const hasNextPage = pageNum < totalPages;
+    const hasPrevPage = pageNum > 1;
+    
+    res.json({
+      photos: photosResult.rows,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalPhotos,
+        limit: limitNum,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
   } catch (err) {
     console.error('❌ Error obteniendo fotos:', err);
     res.status(500).json({ error: 'Error al obtener fotos' });
@@ -381,7 +423,10 @@ app.get('/api/user/photos', auth, async (req, res) => {
       SELECT photos.*, 
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
-             COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
+             CASE 
+             WHEN photos.cloudinary_url IS NOT NULL AND photos.cloudinary_url != '' THEN photos.cloudinary_url
+             ELSE CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)
+           END as image_url
       FROM photos 
       WHERE user_id = $1 
       ORDER BY created_at DESC
@@ -625,7 +670,10 @@ app.get('/api/user/tagged-photos', auth, async (req, res) => {
       SELECT photos.*, users.username, 
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
-             COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
+             CASE 
+             WHEN photos.cloudinary_url IS NOT NULL AND photos.cloudinary_url != '' THEN photos.cloudinary_url
+             ELSE CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)
+           END as image_url
       FROM photos 
       JOIN users ON users.id = photos.user_id 
       JOIN photo_tags ON photo_tags.photo_id = photos.id 
@@ -699,7 +747,10 @@ app.get('/api/users/:id', auth, async (req, res) => {
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
              sections.name as section_name,
-             COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
+             CASE 
+             WHEN photos.cloudinary_url IS NOT NULL AND photos.cloudinary_url != '' THEN photos.cloudinary_url
+             ELSE CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)
+           END as image_url
       FROM photos 
       JOIN sections ON sections.id = photos.section_id
       WHERE user_id = $1 
@@ -950,7 +1001,10 @@ app.get('/api/admin/users/:id', adminAuth, async (req, res) => {
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
              sections.name as section_name,
-             COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
+             CASE 
+             WHEN photos.cloudinary_url IS NOT NULL AND photos.cloudinary_url != '' THEN photos.cloudinary_url
+             ELSE CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)
+           END as image_url
       FROM photos 
       JOIN sections ON sections.id = photos.section_id
       WHERE user_id = $1 
@@ -1039,7 +1093,10 @@ app.get('/api/admin/photos', adminAuth, async (req, res) => {
       SELECT photos.*, users.username, sections.name as section_name,
              (SELECT COUNT(*) FROM votes WHERE photo_id = photos.id) as votes,
              (SELECT COUNT(*) FROM comments WHERE photo_id = photos.id) as comments,
-             COALESCE(photos.cloudinary_url, CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)) as image_url
+             CASE 
+             WHEN photos.cloudinary_url IS NOT NULL AND photos.cloudinary_url != '' THEN photos.cloudinary_url
+             ELSE CONCAT('https://galeria-actuaria-backend.onrender.com/uploads/', photos.filename)
+           END as image_url
       FROM photos 
       JOIN users ON users.id = photos.user_id 
       JOIN sections ON sections.id = photos.section_id

@@ -192,14 +192,17 @@ const Login = React.memo(({ setToken, setUser, setVista }) => {
 const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sections, setFotos }) => {
   const [fotosMarcadas, setFotosMarcadas] = useState(new Set());
   const [fotosVotadas, setFotosVotadas] = useState(new Set());
+  
+  // Verificar que fotos sea un array válido
+  const fotosArray = Array.isArray(fotos) ? fotos : [];
 
   // Cargar fotos marcadas y votadas al montar el componente
   useEffect(() => {
-    if (usuarioId) {
+    if (usuarioId && fotosArray.length > 0) {
       const cargarEstadoFotos = async () => {
         try {
           // Cargar fotos marcadas
-          const promisesMarcadas = fotos.map(foto => 
+          const promisesMarcadas = fotosArray.map(foto => 
             axios.get(API + `/photos/${foto.id}/tagged`, { 
               headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } 
             })
@@ -208,13 +211,13 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
           const marcadas = new Set();
           responsesMarcadas.forEach((response, index) => {
             if (response.data.tagged) {
-              marcadas.add(fotos[index].id);
+              marcadas.add(fotosArray[index].id);
             }
           });
           setFotosMarcadas(marcadas);
           
           // Cargar fotos votadas
-          const promisesVotadas = fotos.map(foto => 
+          const promisesVotadas = fotosArray.map(foto => 
             axios.get(API + `/photos/${foto.id}/vote-status`, { 
               headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } 
             })
@@ -223,7 +226,7 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
           const votadas = new Set();
           responsesVotadas.forEach((response, index) => {
             if (response.data.hasVoted) {
-              votadas.add(fotos[index].id);
+              votadas.add(fotosArray[index].id);
             }
           });
           setFotosVotadas(votadas);
@@ -233,7 +236,7 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
       };
       cargarEstadoFotos();
     }
-  }, [fotos, usuarioId]);
+  }, [fotosArray, usuarioId]);
 
   const marcarFoto = useCallback(async (fotoId) => {
     if (!usuarioId) return;
@@ -309,11 +312,11 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
           <p className="galeria-description">{currentSection.description}</p>
         )}
         <div className="galeria-stats">
-          <span className="fotos-count">{fotos.length} fotos</span>
+          <span className="fotos-count">{fotosArray.length} fotos</span>
         </div>
       </div>
 
-      {fotos.length === 0 ? (
+      {fotosArray.length === 0 ? (
         <div className="galeria-empty">
           <h3>📸 No hay fotos en esta sección</h3>
           <p>
@@ -325,7 +328,7 @@ const Galeria = React.memo(({ fotos, onVotar, usuarioId, selectedSection, sectio
         </div>
       ) : (
         <div className="galeria-grid">
-          {fotos.map(foto => (
+          {fotosArray.map(foto => (
             <div className="foto" key={foto.id}>
               <img src={foto.image_url || UPLOADS_URL + '/' + foto.filename} alt={foto.title} loading="lazy" />
               <div className="foto-info">
@@ -1402,6 +1405,13 @@ export default function App() {
   const [loadingSection, setLoadingSection] = useState(false);
   const [sectionCounts, setSectionCounts] = useState({}); // Conteo de fotos por sección
   
+  // Estados para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalPhotos, setTotalPhotos] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPrevPage, setHasPrevPage] = useState(false);
+  
   // Función para limpiar completamente el estado de la aplicación
   const clearAppState = useCallback(() => {
     setFotos([]);
@@ -1411,6 +1421,12 @@ export default function App() {
     setLoadingSection(false);
     setSectionCounts({});
     setVista('galeria');
+    // Limpiar estados de paginación
+    setCurrentPage(1);
+    setTotalPages(1);
+    setTotalPhotos(0);
+    setHasNextPage(false);
+    setHasPrevPage(false);
     // No establecer setLoading(true) aquí para evitar conflictos
   }, []);
 
@@ -1542,24 +1558,44 @@ export default function App() {
         console.log('✅ Top fotos cargadas:', topResponse.data);
         setTop(topResponse.data);
         
-        // Al inicio solo cargar las fotos top, NO todas las fotos
-        console.log('📸 No se cargan todas las fotos al inicio - esperando selección del usuario');
-        setFotos([]); // No mostrar fotos individuales al inicio
-        setSelectedSection(null); // No hay sección seleccionada al inicio
+        // Cargar las primeras 10 fotos automáticamente al inicio
+        console.log('📸 Cargando primeras 10 fotos al inicio...');
+        const fotosResponse = await axios.get(`${API}/photos?page=1&limit=10`);
+        console.log('✅ Fotos iniciales cargadas:', fotosResponse.data);
+        
+        // Verificar si la respuesta tiene paginación
+        if (fotosResponse.data.pagination) {
+          // Actualizar estados de paginación
+          setFotos(fotosResponse.data.photos);
+          setTotalPages(fotosResponse.data.pagination.totalPages);
+          setTotalPhotos(fotosResponse.data.pagination.totalPhotos);
+          setHasNextPage(fotosResponse.data.pagination.hasNextPage);
+          setHasPrevPage(fotosResponse.data.pagination.hasPrevPage);
+          setCurrentPage(1);
+        } else {
+          // Fallback si no hay paginación
+          setFotos(fotosResponse.data.slice(0, 10));
+          setTotalPages(Math.ceil(fotosResponse.data.length / 10));
+          setTotalPhotos(fotosResponse.data.length);
+          setHasNextPage(fotosResponse.data.length > 10);
+          setHasPrevPage(false);
+          setCurrentPage(1);
+        }
+        setSelectedSection('all'); // Marcar como "todas las fotos"
         
         // Cargar el conteo de fotos por sección
         console.log('📊 Obteniendo conteo de fotos por sección...');
-        const allPhotosResponse = await axios.get(API + '/photos');
-        const allPhotos = allPhotosResponse.data;
+        const allPhotosResponse = await axios.get(API + '/photos?page=1&limit=1000'); // Obtener muchas fotos para el conteo
+        const allPhotos = allPhotosResponse.data.photos || allPhotosResponse.data;
         
         // Calcular conteo por sección
         const counts = {};
         response.data.forEach(section => {
-          counts[section.id] = allPhotos.filter(photo => photo.section_id === section.id).length;
+          counts[section.id] = allPhotos ? allPhotos.filter(photo => photo.section_id === section.id).length : 0;
         });
         
         // Agregar conteo total
-        counts['all'] = allPhotos.length;
+        counts['all'] = allPhotos ? allPhotos.length : 0;
         
         console.log('✅ Conteo por sección:', counts);
         setSectionCounts(counts);
@@ -1578,31 +1614,39 @@ export default function App() {
 
   // Función cargarFotos eliminada - ya no se usa
 
-  const handleShowAllPhotos = useCallback(async () => {
+  const handleShowAllPhotos = useCallback(async (page = 1) => {
     if (loadingSection) return; // Evitar clics múltiples
     
-    console.log('🔄 Cargando todas las fotos...');
+    console.log('🔄 Cargando todas las fotos (página', page, ')...');
     setLoadingSection(true);
     setSelectedSection('all');
+    setCurrentPage(page);
     
     try {
-      // Cargar todas las fotos sin filtrar por sección
-      const fotosRes = await axios.get(API + '/photos');
-      console.log('✅ Todas las fotos cargadas:', fotosRes.data);
-      setFotos(fotosRes.data);
+      // Cargar fotos paginadas sin filtrar por sección
+      const fotosRes = await axios.get(`${API}/photos?page=${page}&limit=10`);
+      console.log('✅ Fotos paginadas cargadas:', fotosRes.data);
+      
+      // Actualizar estados de paginación
+      setFotos(fotosRes.data.photos);
+      setTotalPages(fotosRes.data.pagination.totalPages);
+      setTotalPhotos(fotosRes.data.pagination.totalPhotos);
+      setHasNextPage(fotosRes.data.pagination.hasNextPage);
+      setHasPrevPage(fotosRes.data.pagination.hasPrevPage);
       
       // También actualizar el top con las fotos más votadas
       const topRes = await axios.get(API + '/photos/top');
       console.log('✅ Top fotos actualizado:', topRes.data);
       setTop(topRes.data);
       
-      // Actualizar conteo por sección
-      const allPhotos = fotosRes.data;
+      // Actualizar conteo por sección (usar totalPhotos del backend)
       const counts = {};
       sections.forEach(section => {
-        counts[section.id] = allPhotos.filter(photo => photo.section_id === section.id).length;
+        // Para el conteo por sección, necesitamos hacer una consulta separada
+        // Por ahora usamos el total general
+        counts[section.id] = 0; // Se actualizará cuando se cargue la sección específica
       });
-      counts['all'] = allPhotos.length;
+      counts['all'] = fotosRes.data.pagination.totalPhotos;
       setSectionCounts(counts);
     } catch (err) {
       console.error('❌ Error loading all photos:', err);
@@ -1611,18 +1655,25 @@ export default function App() {
     }
   }, [loadingSection, sections]);
 
-  const handleSectionClick = useCallback(async (sectionId) => {
+  const handleSectionClick = useCallback(async (sectionId, page = 1) => {
     if (loadingSection) return; // Evitar clics múltiples
     
-    console.log('🔄 Cargando fotos de sección:', sectionId);
+    console.log('🔄 Cargando fotos de sección:', sectionId, '(página', page, ')');
     setLoadingSection(true);
     setSelectedSection(sectionId);
+    setCurrentPage(page);
     
     try {
-      // Cargar fotos de la sección seleccionada
-      const fotosRes = await axios.get(`${API}/photos?section_id=${sectionId}`);
+      // Cargar fotos de la sección seleccionada con paginación
+      const fotosRes = await axios.get(`${API}/photos?section_id=${sectionId}&page=${page}&limit=10`);
       console.log('✅ Fotos de sección cargadas:', fotosRes.data);
-      setFotos(fotosRes.data);
+      
+      // Actualizar estados de paginación
+      setFotos(fotosRes.data.photos);
+      setTotalPages(fotosRes.data.pagination.totalPages);
+      setTotalPhotos(fotosRes.data.pagination.totalPhotos);
+      setHasNextPage(fotosRes.data.pagination.hasNextPage);
+      setHasPrevPage(fotosRes.data.pagination.hasPrevPage);
       
       // También actualizar el top con las fotos más votadas
       const topRes = await axios.get(API + '/photos/top');
@@ -1631,12 +1682,12 @@ export default function App() {
       
       // Actualizar conteo por sección
       const allPhotosResponse = await axios.get(API + '/photos');
-      const allPhotos = allPhotosResponse.data;
+      const allPhotos = allPhotosResponse.data.photos || allPhotosResponse.data; // Compatibilidad con respuesta paginada
       const counts = {};
       sections.forEach(section => {
-        counts[section.id] = allPhotos.filter(photo => photo.section_id === section.id).length;
+        counts[section.id] = allPhotos ? allPhotos.filter(photo => photo.section_id === section.id).length : 0;
       });
-      counts['all'] = allPhotos.length;
+      counts['all'] = allPhotos ? allPhotos.length : 0;
       setSectionCounts(counts);
     } catch (err) {
       console.error('❌ Error loading section photos:', err);
@@ -1644,6 +1695,29 @@ export default function App() {
       setLoadingSection(false);
     }
   }, [loadingSection, sections]);
+
+  // Funciones para navegación de páginas
+  const handleNextPage = useCallback(() => {
+    if (hasNextPage && !loadingSection) {
+      const nextPage = currentPage + 1;
+      if (selectedSection === 'all') {
+        handleShowAllPhotos(nextPage);
+      } else if (selectedSection) {
+        handleSectionClick(selectedSection, nextPage);
+      }
+    }
+  }, [hasNextPage, loadingSection, currentPage, selectedSection, handleShowAllPhotos, handleSectionClick]);
+
+  const handlePrevPage = useCallback(() => {
+    if (hasPrevPage && !loadingSection) {
+      const prevPage = currentPage - 1;
+      if (selectedSection === 'all') {
+        handleShowAllPhotos(prevPage);
+      } else if (selectedSection) {
+        handleSectionClick(selectedSection, prevPage);
+      }
+    }
+  }, [hasPrevPage, loadingSection, currentPage, selectedSection, handleShowAllPhotos, handleSectionClick]);
 
   const votar = useCallback(async (id) => {
     if (!token) return;
@@ -1774,26 +1848,82 @@ export default function App() {
                     
                     {/* Mostrar Galeria cuando hay una sección seleccionada o cuando se muestran todas las fotos */}
                     {(selectedSection && selectedSection !== 'all') && (
-                      <Galeria 
-                        fotos={fotos} 
-                        onVotar={votar} 
-                        usuarioId={usuario?.id} 
-                        selectedSection={selectedSection} 
-                        sections={sections}
-                        setFotos={setFotos}
-                      />
+                      <>
+                        <Galeria 
+                          fotos={fotos} 
+                          onVotar={votar} 
+                          usuarioId={usuario?.id} 
+                          selectedSection={selectedSection} 
+                          sections={sections}
+                          setFotos={setFotos}
+                        />
+                        
+                        {/* Controles de paginación */}
+                        {totalPages > 1 && (
+                          <div className="pagination-controls">
+                            <div className="pagination-info">
+                              <span>Página {currentPage} de {totalPages}</span>
+                              <span className="pagination-total">({totalPhotos} fotos total)</span>
+                            </div>
+                            <div className="pagination-buttons">
+                              <button 
+                                onClick={handlePrevPage} 
+                                disabled={!hasPrevPage || loadingSection}
+                                className="pagination-btn prev-btn"
+                              >
+                                ← Anterior
+                              </button>
+                              <button 
+                                onClick={handleNextPage} 
+                                disabled={!hasNextPage || loadingSection}
+                                className="pagination-btn next-btn"
+                              >
+                                Siguiente →
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     {/* Mostrar todas las fotos cuando selectedSection es 'all' */}
                     {selectedSection === 'all' && (
-                      <Galeria 
-                        fotos={fotos} 
-                        onVotar={votar} 
-                        usuarioId={usuario?.id} 
-                        selectedSection={null} 
-                        sections={sections}
-                        setFotos={setFotos}
-                      />
+                      <>
+                        <Galeria 
+                          fotos={fotos} 
+                          onVotar={votar} 
+                          usuarioId={usuario?.id} 
+                          selectedSection={null} 
+                          sections={sections}
+                          setFotos={setFotos}
+                        />
+                        
+                        {/* Controles de paginación */}
+                        {totalPages > 1 && (
+                          <div className="pagination-controls">
+                            <div className="pagination-info">
+                              <span>Página {currentPage} de {totalPages}</span>
+                              <span className="pagination-total">({totalPhotos} fotos total)</span>
+                            </div>
+                            <div className="pagination-buttons">
+                              <button 
+                                onClick={handlePrevPage} 
+                                disabled={!hasPrevPage || loadingSection}
+                                className="pagination-btn prev-btn"
+                              >
+                                ← Anterior
+                              </button>
+                              <button 
+                                onClick={handleNextPage} 
+                                disabled={!hasNextPage || loadingSection}
+                                className="pagination-btn next-btn"
+                              >
+                                Siguiente →
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     {/* Mensaje cuando no hay sección seleccionada */}
